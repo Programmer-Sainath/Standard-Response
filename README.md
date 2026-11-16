@@ -1,3 +1,11 @@
+# Member Roles
+
+### Aayush Pal - Simulations, the Langevin Modelling, Phone Mesh and Federated Learning. Website Backend. 
+### Sainath Kesireddy - Simulations, Drift-Diffusion, Adaptive Large Neighborhood Search. Website Backend. 
+### Prayan Agarwal - Website Frontend, Website Backend.
+### Muhammad Fauzan - Website Frontend, Website Backend.
+### Muhammed Adbdul Rahman - UI/UX, Website Frontend
+
 # Standard Response
 
 ### Live at https://web-production-d0f204de.up.railway.app/dashboard
