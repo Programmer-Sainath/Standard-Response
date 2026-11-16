@@ -1,0 +1,4919 @@
+{
+ "label": "Simulation, not a prediction",
+ "generatedAt": "2026-10-25T09:56:05.317Z",
+ "seeds": 4,
+ "householdsPerRun": 3497,
+ "sample": 0.3,
+ "minutes": 300,
+ "assumptions": [
+  {
+   "name": "Households simulated",
+   "value": "30% of data/population.json",
+   "why": "Runtime; densities and meetings scale with it"
+  },
+  {
+   "name": "Phones",
+   "value": "92% of households",
+   "why": "Smartphone ownership among older adults is lower than average"
+  },
+  {
+   "name": "Radio range",
+   "value": "40 m",
+   "why": "Bluetooth LE or Wi-Fi Direct outdoors between cars and houses"
+  },
+  {
+   "name": "Mobile data in the zone",
+   "value": "8% of phones, online 30% of the time",
+   "why": "Towers lose power and backhaul in a wildfire"
+  },
+  {
+   "name": "Gateways",
+   "value": "25% of phones agree to upload for others",
+   "why": "Opt-in"
+  },
+  {
+   "name": "Everyone who reaches safety is online",
+   "value": "yes",
+   "why": "Shelter Wi-Fi or working networks outside the zone"
+  },
+  {
+   "name": "Street blockages",
+   "value": "logistic in fire proximity, road class and time, spatially clustered",
+   "why": "lib/flow/blockage.ts; no published per-street data exists"
+  },
+  {
+   "name": "Departures",
+   "value": "drift-diffusion, keen and reluctant classes",
+   "why": "UC Berkeley survey of California wildfire evacuees"
+  },
+  {
+   "name": "Crowd motion",
+   "value": "underdamped Langevin, BAOAB; speed slowed by the gap to the car ahead and for turns, lane keeping, about 1,800 cars an hour per lane",
+   "why": "lib/crowd/langevin.ts"
+  },
+  {
+   "name": "Route choice",
+   "value": "fastest route with drive times slowed by traffic, refreshed every 5 min; logit spread of 60 s",
+   "why": "lib/crowd/navigation.ts; Dial's stochastic assignment"
+  }
+ ],
+ "privacy": {
+  "mechanism": "Gaussian noise on each phone's clipped update (local differential privacy)",
+  "clip": 0.5,
+  "noiseMultiplier": 1.5,
+  "maxContributionsPerPhone": 6,
+  "worstCasePerPhone": {
+   "epsilon": 7.81,
+   "delta": 0.00001
+  },
+  "perContribution": {
+   "epsilon": 2.75,
+   "delta": 0.00001
+  },
+  "uploadMinimumMass": 5,
+  "roundMass": 40,
+  "serverOptimizer": {
+   "kind": "adam",
+   "learningRate": 0.3,
+   "beta1": 0.9,
+   "beta2": 0.99,
+   "tau": 0.001
+  }
+ },
+ "results": {
+  "phonesInformedAt30": {
+   "meshOn": {
+    "median": 1460,
+    "p5": 1340,
+    "p95": 1765,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 438,
+    "p5": 385,
+    "p95": 451,
+    "n": 4
+   },
+   "difference": {
+    "median": 1022,
+    "p5": 955,
+    "p95": 1314,
+    "n": 4
+   }
+  },
+  "phonesInformedAt60": {
+   "meshOn": {
+    "median": 2378,
+    "p5": 2234,
+    "p95": 2569,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 768,
+    "p5": 685,
+    "p95": 809,
+    "n": 4
+   },
+   "difference": {
+    "median": 1569,
+    "p5": 1521,
+    "p95": 1868,
+    "n": 4
+   }
+  },
+  "agencyKnowsBlocked": {
+   "meshOn": {
+    "median": 33,
+    "p5": 20,
+    "p95": 39,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 31,
+    "p5": 19,
+    "p95": 34,
+    "n": 4
+   },
+   "difference": {
+    "median": 8,
+    "p5": -1,
+    "p95": 10,
+    "n": 4
+   }
+  },
+  "phonesKnowBlocked": {
+   "meshOn": {
+    "median": 41,
+    "p5": 34,
+    "p95": 53,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 43,
+    "p5": 34,
+    "p95": 58,
+    "n": 4
+   },
+   "difference": {
+    "median": 0,
+    "p5": -5,
+    "p95": 2,
+    "n": 4
+   }
+  },
+  "agencyShareOfSeen": {
+   "meshOn": {
+    "median": 0.8048780487804879,
+    "p5": 0.5882352941176471,
+    "p95": 0.868421052631579,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 0.6388888888888888,
+    "p5": 0.5344827586206896,
+    "p95": 0.7906976744186046,
+    "n": 4
+   },
+   "difference": {
+    "median": 0.20136629798308392,
+    "p5": 0.014180374361883241,
+    "p95": 0.22953216374269014,
+    "n": 4
+   }
+  },
+  "reportLatencyMedianMinutes": {
+   "meshOn": {
+    "median": 15.582632191975911,
+    "p5": 14.008333333333333,
+    "p95": 18.008333333333333,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 18.008333333333333,
+    "p5": 16.008333333333333,
+    "p95": 20.4243413289388,
+    "n": 4
+   },
+   "difference": {
+    "median": -2,
+    "p5": -2.425701141357422,
+    "p95": -0.768585205078125,
+    "n": 4
+   }
+  },
+  "discoveriesByDriving": {
+   "meshOn": {
+    "median": 829,
+    "p5": 715,
+    "p95": 1000,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 1144,
+    "p5": 908,
+    "p95": 1185,
+    "n": 4
+   },
+   "difference": {
+    "median": -193,
+    "p5": -356,
+    "p95": -144,
+    "n": 4
+   }
+  },
+  "arrived": {
+   "meshOn": {
+    "median": 2924,
+    "p5": 2472,
+    "p95": 3048,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 2947,
+    "p5": 2569,
+    "p95": 3044,
+    "n": 4
+   },
+   "difference": {
+    "median": -7,
+    "p5": -97,
+    "p95": 4,
+    "n": 4
+   }
+  },
+  "overrun": {
+   "meshOn": {
+    "median": 83,
+    "p5": 29,
+    "p95": 103,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 78,
+    "p5": 33,
+    "p95": 97,
+    "n": 4
+   },
+   "difference": {
+    "median": 5,
+    "p5": -4,
+    "p95": 6,
+    "n": 4
+   }
+  },
+  "travelMedianMinutes": {
+   "meshOn": {
+    "median": 6.508333333333334,
+    "p5": 6.166666666666667,
+    "p95": 6.516666666666667,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 6.525,
+    "p5": 6.258333333333334,
+    "p95": 6.55,
+    "n": 4
+   },
+   "difference": {
+    "median": -0.016666666666666607,
+    "p5": -0.09166666666666679,
+    "p95": 0.041666666666666075,
+    "n": 4
+   }
+  },
+  "sharedModelAuc": {
+   "meshOn": {
+    "median": 0.7426479068158228,
+    "p5": 0.6349076497963932,
+    "p95": 0.7759200878466933,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 0.5,
+    "p5": 0.5,
+    "p95": 0.5,
+    "n": 4
+   },
+   "difference": {
+    "median": 0.24264790681582282,
+    "p5": 0.13490764979639325,
+    "p95": 0.2759200878466933,
+    "n": 4
+   }
+  },
+  "centralModelAuc": {
+   "meshOn": {
+    "median": 0.7483854226732788,
+    "p5": 0.719917820835252,
+    "p95": 0.8287897404392567,
+    "n": 4
+   },
+   "meshOff": {
+    "median": 0.7582314611924806,
+    "p5": 0.6926428394318302,
+    "p95": 0.8464137613269851,
+    "n": 4
+   },
+   "difference": {
+    "median": 0.010689354275741692,
+    "p5": -0.01762402088772841,
+    "p95": 0.027274981403421772,
+    "n": 4
+   }
+  }
+ },
+ "runs": [
+  {
+   "seed": 1,
+   "mesh": true,
+   "households": 3497,
+   "seconds": 17.161,
+   "timeline": [
+    {
+     "minute": 15,
+     "arrived": 77,
+     "moving": 406,
+     "home": 2685,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.116,
+     "meanSpeed": 12.42,
+     "discoveries": 54,
+     "trulyBlocked": 32,
+     "agencyKnowsBlocked": 7,
+     "phonesKnowBlocked": 10,
+     "phonesKnowingABlockage": 364,
+     "reports": 38,
+     "meetings": 12616,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.663,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 30,
+     "arrived": 998,
+     "moving": 482,
+     "home": 1688,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.27,
+     "meanSpeed": 10.79,
+     "discoveries": 237,
+     "trulyBlocked": 35,
+     "agencyKnowsBlocked": 13,
+     "phonesKnowBlocked": 14,
+     "phonesKnowingABlockage": 1340,
+     "reports": 216,
+     "meetings": 24049,
+     "modelVersion": 1,
+     "massUploaded": 52.9,
+     "auc": {
+      "shared": 0.384,
+      "pooled": 0.565,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 45,
+     "arrived": 1675,
+     "moving": 358,
+     "home": 1135,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.405,
+     "meanSpeed": 8.59,
+     "discoveries": 379,
+     "trulyBlocked": 39,
+     "agencyKnowsBlocked": 15,
+     "phonesKnowBlocked": 15,
+     "phonesKnowingABlockage": 1919,
+     "reports": 379,
+     "meetings": 35395,
+     "modelVersion": 2,
+     "massUploaded": 177.1,
+     "auc": {
+      "shared": 0.311,
+      "pooled": 0.622,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 60,
+     "arrived": 2039,
+     "moving": 257,
+     "home": 872,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.603,
+     "meanSpeed": 5.44,
+     "discoveries": 454,
+     "trulyBlocked": 42,
+     "agencyKnowsBlocked": 16,
+     "phonesKnowBlocked": 16,
+     "phonesKnowingABlockage": 2234,
+     "reports": 471,
+     "meetings": 44852,
+     "modelVersion": 3,
+     "massUploaded": 199.9,
+     "auc": {
+      "shared": 0.398,
+      "pooled": 0.525,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 75,
+     "arrived": 2238,
+     "moving": 241,
+     "home": 689,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.685,
+     "meanSpeed": 4.34,
+     "discoveries": 504,
+     "trulyBlocked": 45,
+     "agencyKnowsBlocked": 16,
+     "phonesKnowBlocked": 16,
+     "phonesKnowingABlockage": 2395,
+     "reports": 526,
+     "meetings": 55576,
+     "modelVersion": 3,
+     "massUploaded": 226.3,
+     "auc": {
+      "shared": 0.366,
+      "pooled": 0.765,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 90,
+     "arrived": 2350,
+     "moving": 234,
+     "home": 584,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.744,
+     "meanSpeed": 3.62,
+     "discoveries": 536,
+     "trulyBlocked": 47,
+     "agencyKnowsBlocked": 16,
+     "phonesKnowBlocked": 16,
+     "phonesKnowingABlockage": 2501,
+     "reports": 555,
+     "meetings": 65858,
+     "modelVersion": 3,
+     "massUploaded": 265.9,
+     "auc": {
+      "shared": 0.393,
+      "pooled": 0.671,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 105,
+     "arrived": 2457,
+     "moving": 209,
+     "home": 502,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.842,
+     "meanSpeed": 2.11,
+     "discoveries": 571,
+     "trulyBlocked": 47,
+     "agencyKnowsBlocked": 16,
+     "phonesKnowBlocked": 17,
+     "phonesKnowingABlockage": 2580,
+     "reports": 596,
+     "meetings": 77274,
+     "modelVersion": 4,
+     "massUploaded": 297.8,
+     "auc": {
+      "shared": 0.395,
+      "pooled": 0.613,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 120,
+     "arrived": 2533,
+     "moving": 196,
+     "home": 439,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.872,
+     "meanSpeed": 1.32,
+     "discoveries": 597,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 17,
+     "phonesKnowBlocked": 18,
+     "phonesKnowingABlockage": 2646,
+     "reports": 619,
+     "meetings": 88154,
+     "modelVersion": 4,
+     "massUploaded": 340.9,
+     "auc": {
+      "shared": 0.51,
+      "pooled": 0.56,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 135,
+     "arrived": 2588,
+     "moving": 208,
+     "home": 372,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.841,
+     "meanSpeed": 1.73,
+     "discoveries": 614,
+     "trulyBlocked": 52,
+     "agencyKnowsBlocked": 17,
+     "phonesKnowBlocked": 18,
+     "phonesKnowingABlockage": 2706,
+     "reports": 637,
+     "meetings": 99558,
+     "modelVersion": 5,
+     "massUploaded": 365.3,
+     "auc": {
+      "shared": 0.443,
+      "pooled": 0.649,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 150,
+     "arrived": 2635,
+     "moving": 206,
+     "home": 327,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.845,
+     "meanSpeed": 1.75,
+     "discoveries": 619,
+     "trulyBlocked": 55,
+     "agencyKnowsBlocked": 17,
+     "phonesKnowBlocked": 18,
+     "phonesKnowingABlockage": 2738,
+     "reports": 647,
+     "meetings": 110908,
+     "modelVersion": 5,
+     "massUploaded": 365.3,
+     "auc": {
+      "shared": 0.459,
+      "pooled": 0.681,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 165,
+     "arrived": 2679,
+     "moving": 202,
+     "home": 287,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.901,
+     "meanSpeed": 1.08,
+     "discoveries": 643,
+     "trulyBlocked": 57,
+     "agencyKnowsBlocked": 18,
+     "phonesKnowBlocked": 20,
+     "phonesKnowingABlockage": 2766,
+     "reports": 667,
+     "meetings": 122783,
+     "modelVersion": 5,
+     "massUploaded": 365.3,
+     "auc": {
+      "shared": 0.557,
+      "pooled": 0.746,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 180,
+     "arrived": 2709,
+     "moving": 198,
+     "home": 261,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.884,
+     "meanSpeed": 1.26,
+     "discoveries": 669,
+     "trulyBlocked": 60,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 21,
+     "phonesKnowingABlockage": 2794,
+     "reports": 682,
+     "meetings": 134284,
+     "modelVersion": 5,
+     "massUploaded": 381.2,
+     "auc": {
+      "shared": 0.541,
+      "pooled": 0.732,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 195,
+     "arrived": 2745,
+     "moving": 198,
+     "home": 225,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.894,
+     "meanSpeed": 1.04,
+     "discoveries": 687,
+     "trulyBlocked": 62,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 21,
+     "phonesKnowingABlockage": 2815,
+     "reports": 712,
+     "meetings": 146042,
+     "modelVersion": 5,
+     "massUploaded": 414.8,
+     "auc": {
+      "shared": 0.414,
+      "pooled": 0.623,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 210,
+     "arrived": 2773,
+     "moving": 194,
+     "home": 201,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.923,
+     "meanSpeed": 0.94,
+     "discoveries": 709,
+     "trulyBlocked": 65,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 2832,
+     "reports": 731,
+     "meetings": 157659,
+     "modelVersion": 6,
+     "massUploaded": 448.6,
+     "auc": {
+      "shared": 0.516,
+      "pooled": 0.631,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 225,
+     "arrived": 2794,
+     "moving": 195,
+     "home": 179,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.918,
+     "meanSpeed": 0.62,
+     "discoveries": 719,
+     "trulyBlocked": 70,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 2840,
+     "reports": 742,
+     "meetings": 169428,
+     "modelVersion": 6,
+     "massUploaded": 448.6,
+     "auc": {
+      "shared": 0.426,
+      "pooled": 0.685,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 240,
+     "arrived": 2811,
+     "moving": 192,
+     "home": 165,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.953,
+     "meanSpeed": 0.19,
+     "discoveries": 723,
+     "trulyBlocked": 76,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 2851,
+     "reports": 746,
+     "meetings": 181179,
+     "modelVersion": 6,
+     "massUploaded": 448.6,
+     "auc": {
+      "shared": 0.468,
+      "pooled": 0.695,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 255,
+     "arrived": 2820,
+     "moving": 198,
+     "home": 150,
+     "waiting": 328,
+     "overrun": 1,
+     "jammedShare": 0.934,
+     "meanSpeed": 0.64,
+     "discoveries": 730,
+     "trulyBlocked": 88,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 2868,
+     "reports": 749,
+     "meetings": 193261,
+     "modelVersion": 6,
+     "massUploaded": 448.6,
+     "auc": {
+      "shared": 0.574,
+      "pooled": 0.751,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 270,
+     "arrived": 2836,
+     "moving": 202,
+     "home": 126,
+     "waiting": 320,
+     "overrun": 13,
+     "jammedShare": 0.916,
+     "meanSpeed": 0.82,
+     "discoveries": 738,
+     "trulyBlocked": 99,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 31,
+     "phonesKnowingABlockage": 2881,
+     "reports": 756,
+     "meetings": 205134,
+     "modelVersion": 6,
+     "massUploaded": 453.7,
+     "auc": {
+      "shared": 0.501,
+      "pooled": 0.685,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 285,
+     "arrived": 2854,
+     "moving": 197,
+     "home": 113,
+     "waiting": 319,
+     "overrun": 14,
+     "jammedShare": 0.939,
+     "meanSpeed": 0.35,
+     "discoveries": 748,
+     "trulyBlocked": 113,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 34,
+     "phonesKnowingABlockage": 2892,
+     "reports": 765,
+     "meetings": 217285,
+     "modelVersion": 6,
+     "massUploaded": 453.7,
+     "auc": {
+      "shared": 0.741,
+      "pooled": 0.828,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 300,
+     "arrived": 2865,
+     "moving": 192,
+     "home": 101,
+     "waiting": 310,
+     "overrun": 29,
+     "jammedShare": 0.964,
+     "meanSpeed": 0.19,
+     "discoveries": 752,
+     "trulyBlocked": 120,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 34,
+     "phonesKnowingABlockage": 2900,
+     "reports": 771,
+     "meetings": 229023,
+     "modelVersion": 6,
+     "massUploaded": 453.7,
+     "auc": {
+      "shared": 0.709,
+      "pooled": 0.829,
+      "initial": 0.5
+     }
+    }
+   ],
+   "final": {
+    "arrived": 2865,
+    "overrun": 29,
+    "waitingForHelp": 310,
+    "discoveries": 752,
+    "travelMedian": 6.35,
+    "travelP90": 10.366666666666667,
+    "trulyBlocked": 120,
+    "agencyKnowsBlocked": 20,
+    "phonesKnowBlocked": 34,
+    "agencyShareOfSeen": 0.5882352941176471,
+    "agencyWrongBlocked": 0,
+    "reportLatencyMinutes": {
+     "median": 14.008333333333333,
+     "p5": 0.008333333333333333,
+     "p95": 72.15135014851887,
+     "n": 22
+    },
+    "modelVersion": 6,
+    "massUploaded": 453.66287246416323,
+    "auc": {
+     "shared": 0.7089156811549685,
+     "initial": 0.5,
+     "pooled": 0.8287897404392567
+    },
+    "phonesContributing": 2304,
+    "bottlenecks": [
+     {
+      "street": "unnamed road",
+      "segment": "279681067-13480920309-0",
+      "carsThrough": 846,
+      "meanSpeedKph": 25.3,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "Windsor Avenue",
+      "segment": "279678235-11284984284-0",
+      "carsThrough": 842,
+      "meanSpeedKph": 29.7,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-322564299-0",
+      "carsThrough": 900,
+      "meanSpeedKph": 18.5,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "123186718-322564299-0",
+      "carsThrough": 509,
+      "meanSpeedKph": 29.1,
+      "freeSpeedKph": 39
+     },
+     {
+      "street": "Lincoln Avenue",
+      "segment": "20827746-322565389-0",
+      "carsThrough": 1300,
+      "meanSpeedKph": 37.8,
+      "freeSpeedKph": 56.3
+     },
+     {
+      "street": "West Woodbury Road",
+      "segment": "4048407117-13478199348-0",
+      "carsThrough": 350,
+      "meanSpeedKph": 49,
+      "freeSpeedKph": 64.4
+     },
+     {
+      "street": "Lincoln Avenue",
+      "segment": "25712882-4048407100-0",
+      "carsThrough": 637,
+      "meanSpeedKph": 36.2,
+      "freeSpeedKph": 56.3
+     },
+     {
+      "street": "East Woodbury Road",
+      "segment": "373578220-373578223-0",
+      "carsThrough": 26,
+      "meanSpeedKph": 0,
+      "freeSpeedKph": 48.3
+     }
+    ],
+    "maxContributionsPerPhone": 6
+   }
+  },
+  {
+   "seed": 2,
+   "mesh": true,
+   "households": 3503,
+   "seconds": 42.729,
+   "timeline": [
+    {
+     "minute": 15,
+     "arrived": 91,
+     "moving": 392,
+     "home": 2681,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.173,
+     "meanSpeed": 11.29,
+     "discoveries": 61,
+     "trulyBlocked": 46,
+     "agencyKnowsBlocked": 8,
+     "phonesKnowBlocked": 17,
+     "phonesKnowingABlockage": 254,
+     "reports": 41,
+     "meetings": 11898,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.523,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 30,
+     "arrived": 803,
+     "moving": 701,
+     "home": 1660,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.504,
+     "meanSpeed": 6.71,
+     "discoveries": 237,
+     "trulyBlocked": 48,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 1427,
+     "reports": 297,
+     "meetings": 26830,
+     "modelVersion": 1,
+     "massUploaded": 80.8,
+     "auc": {
+      "shared": 0.39,
+      "pooled": 0.602,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 45,
+     "arrived": 1379,
+     "moving": 673,
+     "home": 1112,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.679,
+     "meanSpeed": 4.44,
+     "discoveries": 339,
+     "trulyBlocked": 52,
+     "agencyKnowsBlocked": 24,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 2040,
+     "reports": 524,
+     "meetings": 42791,
+     "modelVersion": 2,
+     "massUploaded": 171.2,
+     "auc": {
+      "shared": 0.48,
+      "pooled": 0.519,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 60,
+     "arrived": 1719,
+     "moving": 609,
+     "home": 836,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.798,
+     "meanSpeed": 2.7,
+     "discoveries": 394,
+     "trulyBlocked": 53,
+     "agencyKnowsBlocked": 24,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 2289,
+     "reports": 635,
+     "meetings": 58072,
+     "modelVersion": 3,
+     "massUploaded": 212.4,
+     "auc": {
+      "shared": 0.427,
+      "pooled": 0.667,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 75,
+     "arrived": 1917,
+     "moving": 566,
+     "home": 681,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.88,
+     "meanSpeed": 1.38,
+     "discoveries": 455,
+     "trulyBlocked": 55,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 2448,
+     "reports": 734,
+     "meetings": 74498,
+     "modelVersion": 3,
+     "massUploaded": 246.2,
+     "auc": {
+      "shared": 0.471,
+      "pooled": 0.505,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 90,
+     "arrived": 2030,
+     "moving": 576,
+     "home": 558,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.885,
+     "meanSpeed": 1.19,
+     "discoveries": 493,
+     "trulyBlocked": 59,
+     "agencyKnowsBlocked": 27,
+     "phonesKnowBlocked": 29,
+     "phonesKnowingABlockage": 2545,
+     "reports": 781,
+     "meetings": 91098,
+     "modelVersion": 4,
+     "massUploaded": 285.9,
+     "auc": {
+      "shared": 0.524,
+      "pooled": 0.557,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 105,
+     "arrived": 2124,
+     "moving": 572,
+     "home": 468,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.918,
+     "meanSpeed": 0.89,
+     "discoveries": 530,
+     "trulyBlocked": 64,
+     "agencyKnowsBlocked": 29,
+     "phonesKnowBlocked": 30,
+     "phonesKnowingABlockage": 2607,
+     "reports": 840,
+     "meetings": 108527,
+     "modelVersion": 4,
+     "massUploaded": 314.8,
+     "auc": {
+      "shared": 0.384,
+      "pooled": 0.536,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 120,
+     "arrived": 2195,
+     "moving": 567,
+     "home": 402,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.931,
+     "meanSpeed": 0.68,
+     "discoveries": 563,
+     "trulyBlocked": 67,
+     "agencyKnowsBlocked": 29,
+     "phonesKnowBlocked": 33,
+     "phonesKnowingABlockage": 2671,
+     "reports": 882,
+     "meetings": 125964,
+     "modelVersion": 5,
+     "massUploaded": 360.4,
+     "auc": {
+      "shared": 0.517,
+      "pooled": 0.477,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 135,
+     "arrived": 2249,
+     "moving": 564,
+     "home": 351,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.94,
+     "meanSpeed": 0.47,
+     "discoveries": 585,
+     "trulyBlocked": 68,
+     "agencyKnowsBlocked": 31,
+     "phonesKnowBlocked": 33,
+     "phonesKnowingABlockage": 2702,
+     "reports": 919,
+     "meetings": 143449,
+     "modelVersion": 5,
+     "massUploaded": 380.6,
+     "auc": {
+      "shared": 0.669,
+      "pooled": 0.558,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 150,
+     "arrived": 2283,
+     "moving": 566,
+     "home": 315,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.942,
+     "meanSpeed": 0.36,
+     "discoveries": 600,
+     "trulyBlocked": 69,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 33,
+     "phonesKnowingABlockage": 2723,
+     "reports": 941,
+     "meetings": 161704,
+     "modelVersion": 5,
+     "massUploaded": 385.7,
+     "auc": {
+      "shared": 0.574,
+      "pooled": 0.679,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 165,
+     "arrived": 2311,
+     "moving": 563,
+     "home": 290,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.952,
+     "meanSpeed": 0.28,
+     "discoveries": 614,
+     "trulyBlocked": 72,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 34,
+     "phonesKnowingABlockage": 2743,
+     "reports": 960,
+     "meetings": 180023,
+     "modelVersion": 6,
+     "massUploaded": 427.9,
+     "auc": {
+      "shared": 0.515,
+      "pooled": 0.457,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 180,
+     "arrived": 2340,
+     "moving": 568,
+     "home": 256,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.949,
+     "meanSpeed": 0.38,
+     "discoveries": 626,
+     "trulyBlocked": 76,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 34,
+     "phonesKnowingABlockage": 2761,
+     "reports": 972,
+     "meetings": 198657,
+     "modelVersion": 6,
+     "massUploaded": 427.9,
+     "auc": {
+      "shared": 0.649,
+      "pooled": 0.468,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 195,
+     "arrived": 2364,
+     "moving": 564,
+     "home": 236,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.959,
+     "meanSpeed": 0.33,
+     "discoveries": 630,
+     "trulyBlocked": 78,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 35,
+     "phonesKnowingABlockage": 2779,
+     "reports": 982,
+     "meetings": 217302,
+     "modelVersion": 6,
+     "massUploaded": 434.6,
+     "auc": {
+      "shared": 0.677,
+      "pooled": 0.586,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 210,
+     "arrived": 2384,
+     "moving": 566,
+     "home": 214,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.961,
+     "meanSpeed": 0.26,
+     "discoveries": 636,
+     "trulyBlocked": 81,
+     "agencyKnowsBlocked": 33,
+     "phonesKnowBlocked": 35,
+     "phonesKnowingABlockage": 2795,
+     "reports": 997,
+     "meetings": 236357,
+     "modelVersion": 6,
+     "massUploaded": 446.9,
+     "auc": {
+      "shared": 0.66,
+      "pooled": 0.601,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 225,
+     "arrived": 2402,
+     "moving": 568,
+     "home": 194,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.952,
+     "meanSpeed": 0.26,
+     "discoveries": 645,
+     "trulyBlocked": 83,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 35,
+     "phonesKnowingABlockage": 2809,
+     "reports": 1010,
+     "meetings": 255251,
+     "modelVersion": 6,
+     "massUploaded": 456.1,
+     "auc": {
+      "shared": 0.612,
+      "pooled": 0.593,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 240,
+     "arrived": 2426,
+     "moving": 570,
+     "home": 168,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.956,
+     "meanSpeed": 0.3,
+     "discoveries": 669,
+     "trulyBlocked": 85,
+     "agencyKnowsBlocked": 33,
+     "phonesKnowBlocked": 36,
+     "phonesKnowingABlockage": 2822,
+     "reports": 1024,
+     "meetings": 274535,
+     "modelVersion": 6,
+     "massUploaded": 461.6,
+     "auc": {
+      "shared": 0.609,
+      "pooled": 0.538,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 255,
+     "arrived": 2441,
+     "moving": 573,
+     "home": 150,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.96,
+     "meanSpeed": 0.19,
+     "discoveries": 681,
+     "trulyBlocked": 93,
+     "agencyKnowsBlocked": 36,
+     "phonesKnowBlocked": 42,
+     "phonesKnowingABlockage": 2834,
+     "reports": 1048,
+     "meetings": 293524,
+     "modelVersion": 7,
+     "massUploaded": 472.8,
+     "auc": {
+      "shared": 0.73,
+      "pooled": 0.542,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 270,
+     "arrived": 2452,
+     "moving": 542,
+     "home": 127,
+     "waiting": 330,
+     "overrun": 52,
+     "jammedShare": 0.954,
+     "meanSpeed": 0.23,
+     "discoveries": 701,
+     "trulyBlocked": 102,
+     "agencyKnowsBlocked": 38,
+     "phonesKnowBlocked": 47,
+     "phonesKnowingABlockage": 2848,
+     "reports": 1058,
+     "meetings": 313184,
+     "modelVersion": 7,
+     "massUploaded": 517.8,
+     "auc": {
+      "shared": 0.706,
+      "pooled": 0.748,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 285,
+     "arrived": 2465,
+     "moving": 546,
+     "home": 110,
+     "waiting": 328,
+     "overrun": 54,
+     "jammedShare": 0.954,
+     "meanSpeed": 0.2,
+     "discoveries": 707,
+     "trulyBlocked": 110,
+     "agencyKnowsBlocked": 39,
+     "phonesKnowBlocked": 48,
+     "phonesKnowingABlockage": 2862,
+     "reports": 1070,
+     "meetings": 332337,
+     "modelVersion": 7,
+     "massUploaded": 529.2,
+     "auc": {
+      "shared": 0.749,
+      "pooled": 0.698,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 300,
+     "arrived": 2472,
+     "moving": 530,
+     "home": 97,
+     "waiting": 321,
+     "overrun": 83,
+     "jammedShare": 0.955,
+     "meanSpeed": 0.22,
+     "discoveries": 715,
+     "trulyBlocked": 118,
+     "agencyKnowsBlocked": 39,
+     "phonesKnowBlocked": 53,
+     "phonesKnowingABlockage": 2869,
+     "reports": 1074,
+     "meetings": 351981,
+     "modelVersion": 7,
+     "massUploaded": 534.9,
+     "auc": {
+      "shared": 0.776,
+      "pooled": 0.72,
+      "initial": 0.5
+     }
+    }
+   ],
+   "final": {
+    "arrived": 2472,
+    "overrun": 83,
+    "waitingForHelp": 321,
+    "discoveries": 715,
+    "travelMedian": 6.166666666666667,
+    "travelP90": 10.241666666666667,
+    "trulyBlocked": 118,
+    "agencyKnowsBlocked": 39,
+    "phonesKnowBlocked": 53,
+    "agencyShareOfSeen": 0.7358490566037735,
+    "agencyWrongBlocked": 0,
+    "reportLatencyMinutes": {
+     "median": 18.008333333333333,
+     "p5": 5.451917775472005,
+     "p95": 79.83795750935872,
+     "n": 41
+    },
+    "modelVersion": 7,
+    "massUploaded": 534.8860815798826,
+    "auc": {
+     "shared": 0.7759200878466933,
+     "initial": 0.5,
+     "pooled": 0.719917820835252
+    },
+    "phonesContributing": 2309,
+    "bottlenecks": [
+     {
+      "street": "North Lincoln Avenue",
+      "segment": "122679570-122679574-0",
+      "carsThrough": 619,
+      "meanSpeedKph": 7.7,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "Windsor Avenue",
+      "segment": "279678235-11284984284-0",
+      "carsThrough": 652,
+      "meanSpeedKph": 24.6,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-13480920309-0",
+      "carsThrough": 662,
+      "meanSpeedKph": 23.8,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122925331-13480852867-0",
+      "carsThrough": 881,
+      "meanSpeedKph": 32.6,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "Florecita Crescent",
+      "segment": "123069485-123069488-0",
+      "carsThrough": 94,
+      "meanSpeedKph": 0,
+      "freeSpeedKph": 39
+     },
+     {
+      "street": "North Lake Avenue",
+      "segment": "451041135-451121323-0",
+      "carsThrough": 89,
+      "meanSpeedKph": 0.1,
+      "freeSpeedKph": 56.3
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-322564299-0",
+      "carsThrough": 430,
+      "meanSpeedKph": 17.2,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "unnamed road",
+      "segment": "32581284-279670543-0",
+      "carsThrough": 76,
+      "meanSpeedKph": 0.7,
+      "freeSpeedKph": 104.6
+     }
+    ],
+    "maxContributionsPerPhone": 6
+   }
+  },
+  {
+   "seed": 3,
+   "mesh": true,
+   "households": 3548,
+   "seconds": 20.284,
+   "timeline": [
+    {
+     "minute": 15,
+     "arrived": 90,
+     "moving": 422,
+     "home": 2720,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.118,
+     "meanSpeed": 13.1,
+     "discoveries": 92,
+     "trulyBlocked": 42,
+     "agencyKnowsBlocked": 9,
+     "phonesKnowBlocked": 16,
+     "phonesKnowingABlockage": 406,
+     "reports": 19,
+     "meetings": 12717,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.569,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 30,
+     "arrived": 1099,
+     "moving": 486,
+     "home": 1647,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.154,
+     "meanSpeed": 11.37,
+     "discoveries": 455,
+     "trulyBlocked": 43,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 1765,
+     "reports": 489,
+     "meetings": 24177,
+     "modelVersion": 1,
+     "massUploaded": 58.6,
+     "auc": {
+      "shared": 0.398,
+      "pooled": 0.646,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 45,
+     "arrived": 1843,
+     "moving": 278,
+     "home": 1111,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.248,
+     "meanSpeed": 11.24,
+     "discoveries": 637,
+     "trulyBlocked": 45,
+     "agencyKnowsBlocked": 23,
+     "phonesKnowBlocked": 24,
+     "phonesKnowingABlockage": 2363,
+     "reports": 873,
+     "meetings": 34404,
+     "modelVersion": 3,
+     "massUploaded": 207.1,
+     "auc": {
+      "shared": 0.348,
+      "pooled": 0.614,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 60,
+     "arrived": 2214,
+     "moving": 206,
+     "home": 812,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.364,
+     "meanSpeed": 8.88,
+     "discoveries": 737,
+     "trulyBlocked": 48,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 2569,
+     "reports": 1077,
+     "meetings": 41913,
+     "modelVersion": 3,
+     "massUploaded": 207.1,
+     "auc": {
+      "shared": 0.348,
+      "pooled": 0.612,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 75,
+     "arrived": 2436,
+     "moving": 149,
+     "home": 647,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.497,
+     "meanSpeed": 6.86,
+     "discoveries": 801,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 2694,
+     "reports": 1205,
+     "meetings": 50033,
+     "modelVersion": 3,
+     "massUploaded": 212.8,
+     "auc": {
+      "shared": 0.331,
+      "pooled": 0.66,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 90,
+     "arrived": 2571,
+     "moving": 124,
+     "home": 537,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.573,
+     "meanSpeed": 5.11,
+     "discoveries": 827,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 2762,
+     "reports": 1265,
+     "meetings": 57676,
+     "modelVersion": 4,
+     "massUploaded": 271.4,
+     "auc": {
+      "shared": 0.571,
+      "pooled": 0.783,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 105,
+     "arrived": 2665,
+     "moving": 98,
+     "home": 469,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.684,
+     "meanSpeed": 3.51,
+     "discoveries": 855,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 2806,
+     "reports": 1313,
+     "meetings": 65954,
+     "modelVersion": 4,
+     "massUploaded": 298.1,
+     "auc": {
+      "shared": 0.463,
+      "pooled": 0.719,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 120,
+     "arrived": 2733,
+     "moving": 102,
+     "home": 397,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.735,
+     "meanSpeed": 3.18,
+     "discoveries": 868,
+     "trulyBlocked": 51,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 2842,
+     "reports": 1340,
+     "meetings": 73895,
+     "modelVersion": 4,
+     "massUploaded": 319.3,
+     "auc": {
+      "shared": 0.45,
+      "pooled": 0.651,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 135,
+     "arrived": 2784,
+     "moving": 96,
+     "home": 352,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.729,
+     "meanSpeed": 3.3,
+     "discoveries": 887,
+     "trulyBlocked": 53,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 2874,
+     "reports": 1365,
+     "meetings": 82275,
+     "modelVersion": 5,
+     "massUploaded": 352.5,
+     "auc": {
+      "shared": 0.347,
+      "pooled": 0.662,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 150,
+     "arrived": 2834,
+     "moving": 96,
+     "home": 302,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.74,
+     "meanSpeed": 3.38,
+     "discoveries": 900,
+     "trulyBlocked": 60,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 2898,
+     "reports": 1383,
+     "meetings": 90419,
+     "modelVersion": 5,
+     "massUploaded": 357.5,
+     "auc": {
+      "shared": 0.467,
+      "pooled": 0.675,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 165,
+     "arrived": 2876,
+     "moving": 100,
+     "home": 256,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.72,
+     "meanSpeed": 2.78,
+     "discoveries": 913,
+     "trulyBlocked": 63,
+     "agencyKnowsBlocked": 26,
+     "phonesKnowBlocked": 28,
+     "phonesKnowingABlockage": 2924,
+     "reports": 1402,
+     "meetings": 98917,
+     "modelVersion": 5,
+     "massUploaded": 369.7,
+     "auc": {
+      "shared": 0.433,
+      "pooled": 0.69,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 180,
+     "arrived": 2908,
+     "moving": 96,
+     "home": 228,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.76,
+     "meanSpeed": 2.77,
+     "discoveries": 926,
+     "trulyBlocked": 65,
+     "agencyKnowsBlocked": 27,
+     "phonesKnowBlocked": 29,
+     "phonesKnowingABlockage": 2948,
+     "reports": 1430,
+     "meetings": 107217,
+     "modelVersion": 5,
+     "massUploaded": 396.6,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.729,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 195,
+     "arrived": 2945,
+     "moving": 83,
+     "home": 204,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.843,
+     "meanSpeed": 0.89,
+     "discoveries": 935,
+     "trulyBlocked": 69,
+     "agencyKnowsBlocked": 28,
+     "phonesKnowBlocked": 30,
+     "phonesKnowingABlockage": 2968,
+     "reports": 1445,
+     "meetings": 115793,
+     "modelVersion": 5,
+     "massUploaded": 424.8,
+     "auc": {
+      "shared": 0.426,
+      "pooled": 0.645,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 210,
+     "arrived": 2963,
+     "moving": 91,
+     "home": 178,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.769,
+     "meanSpeed": 2.61,
+     "discoveries": 951,
+     "trulyBlocked": 76,
+     "agencyKnowsBlocked": 27,
+     "phonesKnowBlocked": 32,
+     "phonesKnowingABlockage": 2982,
+     "reports": 1455,
+     "meetings": 124203,
+     "modelVersion": 5,
+     "massUploaded": 430.2,
+     "auc": {
+      "shared": 0.371,
+      "pooled": 0.551,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 225,
+     "arrived": 2984,
+     "moving": 83,
+     "home": 165,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.867,
+     "meanSpeed": 0.94,
+     "discoveries": 959,
+     "trulyBlocked": 83,
+     "agencyKnowsBlocked": 28,
+     "phonesKnowBlocked": 32,
+     "phonesKnowingABlockage": 2997,
+     "reports": 1477,
+     "meetings": 132859,
+     "modelVersion": 6,
+     "massUploaded": 435.9,
+     "auc": {
+      "shared": 0.575,
+      "pooled": 0.557,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 240,
+     "arrived": 3004,
+     "moving": 87,
+     "home": 141,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.816,
+     "meanSpeed": 1.4,
+     "discoveries": 979,
+     "trulyBlocked": 87,
+     "agencyKnowsBlocked": 30,
+     "phonesKnowBlocked": 35,
+     "phonesKnowingABlockage": 3013,
+     "reports": 1501,
+     "meetings": 141375,
+     "modelVersion": 6,
+     "massUploaded": 435.9,
+     "auc": {
+      "shared": 0.543,
+      "pooled": 0.627,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 255,
+     "arrived": 3020,
+     "moving": 86,
+     "home": 126,
+     "waiting": 315,
+     "overrun": 1,
+     "jammedShare": 0.86,
+     "meanSpeed": 1.07,
+     "discoveries": 982,
+     "trulyBlocked": 99,
+     "agencyKnowsBlocked": 30,
+     "phonesKnowBlocked": 36,
+     "phonesKnowingABlockage": 3023,
+     "reports": 1508,
+     "meetings": 150111,
+     "modelVersion": 6,
+     "massUploaded": 435.9,
+     "auc": {
+      "shared": 0.539,
+      "pooled": 0.625,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 270,
+     "arrived": 3033,
+     "moving": 82,
+     "home": 107,
+     "waiting": 304,
+     "overrun": 22,
+     "jammedShare": 0.805,
+     "meanSpeed": 1.25,
+     "discoveries": 992,
+     "trulyBlocked": 113,
+     "agencyKnowsBlocked": 31,
+     "phonesKnowBlocked": 38,
+     "phonesKnowingABlockage": 3033,
+     "reports": 1511,
+     "meetings": 158710,
+     "modelVersion": 6,
+     "massUploaded": 435.9,
+     "auc": {
+      "shared": 0.585,
+      "pooled": 0.749,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 285,
+     "arrived": 3044,
+     "moving": 76,
+     "home": 99,
+     "waiting": 300,
+     "overrun": 29,
+     "jammedShare": 0.895,
+     "meanSpeed": 0.44,
+     "discoveries": 995,
+     "trulyBlocked": 128,
+     "agencyKnowsBlocked": 33,
+     "phonesKnowBlocked": 40,
+     "phonesKnowingABlockage": 3039,
+     "reports": 1525,
+     "meetings": 167466,
+     "modelVersion": 6,
+     "massUploaded": 435.9,
+     "auc": {
+      "shared": 0.7,
+      "pooled": 0.773,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 300,
+     "arrived": 3048,
+     "moving": 76,
+     "home": 92,
+     "waiting": 292,
+     "overrun": 40,
+     "jammedShare": 0.855,
+     "meanSpeed": 0.48,
+     "discoveries": 1000,
+     "trulyBlocked": 138,
+     "agencyKnowsBlocked": 33,
+     "phonesKnowBlocked": 41,
+     "phonesKnowingABlockage": 3043,
+     "reports": 1531,
+     "meetings": 176082,
+     "modelVersion": 6,
+     "massUploaded": 435.9,
+     "auc": {
+      "shared": 0.743,
+      "pooled": 0.748,
+      "initial": 0.5
+     }
+    }
+   ],
+   "final": {
+    "arrived": 3048,
+    "overrun": 40,
+    "waitingForHelp": 292,
+    "discoveries": 1000,
+    "travelMedian": 6.508333333333334,
+    "travelP90": 11.3,
+    "trulyBlocked": 138,
+    "agencyKnowsBlocked": 33,
+    "phonesKnowBlocked": 41,
+    "agencyShareOfSeen": 0.8048780487804879,
+    "agencyWrongBlocked": 0,
+    "reportLatencyMinutes": {
+     "median": 15.239748128255208,
+     "p5": 4.008333333333334,
+     "p95": 97.64096654256184,
+     "n": 34
+    },
+    "modelVersion": 6,
+    "massUploaded": 435.9188105996444,
+    "auc": {
+     "shared": 0.7426479068158228,
+     "initial": 0.5,
+     "pooled": 0.7483854226732788
+    },
+    "phonesContributing": 2439,
+    "bottlenecks": [
+     {
+      "street": "West Howard Street",
+      "segment": "122925331-13480852867-0",
+      "carsThrough": 825,
+      "meanSpeedKph": 26.6,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-13480920309-0",
+      "carsThrough": 916,
+      "meanSpeedKph": 25.4,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "Windsor Avenue",
+      "segment": "279678235-11284984284-0",
+      "carsThrough": 911,
+      "meanSpeedKph": 28.2,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-122925331-0",
+      "carsThrough": 825,
+      "meanSpeedKph": 29.5,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-364284520-0",
+      "carsThrough": 938,
+      "meanSpeedKph": 63.3,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "North Lake Avenue",
+      "segment": "122929088-122929091-0",
+      "carsThrough": 543,
+      "meanSpeedKph": 34.3,
+      "freeSpeedKph": 56.3
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-322564299-0",
+      "carsThrough": 474,
+      "meanSpeedKph": 16.4,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "Lincoln Avenue",
+      "segment": "25712882-4048407100-0",
+      "carsThrough": 595,
+      "meanSpeedKph": 33,
+      "freeSpeedKph": 56.3
+     }
+    ],
+    "maxContributionsPerPhone": 6
+   }
+  },
+  {
+   "seed": 4,
+   "mesh": true,
+   "households": 3559,
+   "seconds": 16.538,
+   "timeline": [
+    {
+     "minute": 15,
+     "arrived": 93,
+     "moving": 407,
+     "home": 2751,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.106,
+     "meanSpeed": 11.78,
+     "discoveries": 64,
+     "trulyBlocked": 32,
+     "agencyKnowsBlocked": 7,
+     "phonesKnowBlocked": 11,
+     "phonesKnowingABlockage": 344,
+     "reports": 33,
+     "meetings": 12932,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.596,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 30,
+     "arrived": 988,
+     "moving": 551,
+     "home": 1712,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.22,
+     "meanSpeed": 10.53,
+     "discoveries": 249,
+     "trulyBlocked": 33,
+     "agencyKnowsBlocked": 12,
+     "phonesKnowBlocked": 13,
+     "phonesKnowingABlockage": 1460,
+     "reports": 211,
+     "meetings": 24671,
+     "modelVersion": 1,
+     "massUploaded": 47.5,
+     "auc": {
+      "shared": 0.62,
+      "pooled": 0.607,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 45,
+     "arrived": 1720,
+     "moving": 399,
+     "home": 1132,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.398,
+     "meanSpeed": 8.28,
+     "discoveries": 435,
+     "trulyBlocked": 36,
+     "agencyKnowsBlocked": 16,
+     "phonesKnowBlocked": 18,
+     "phonesKnowingABlockage": 2106,
+     "reports": 404,
+     "meetings": 35867,
+     "modelVersion": 2,
+     "massUploaded": 176.1,
+     "auc": {
+      "shared": 0.783,
+      "pooled": 0.592,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 60,
+     "arrived": 2089,
+     "moving": 295,
+     "home": 867,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.597,
+     "meanSpeed": 5.22,
+     "discoveries": 523,
+     "trulyBlocked": 38,
+     "agencyKnowsBlocked": 18,
+     "phonesKnowBlocked": 19,
+     "phonesKnowingABlockage": 2378,
+     "reports": 515,
+     "meetings": 44311,
+     "modelVersion": 3,
+     "massUploaded": 204,
+     "auc": {
+      "shared": 0.607,
+      "pooled": 0.526,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 75,
+     "arrived": 2305,
+     "moving": 279,
+     "home": 667,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.638,
+     "meanSpeed": 4.98,
+     "discoveries": 592,
+     "trulyBlocked": 41,
+     "agencyKnowsBlocked": 18,
+     "phonesKnowBlocked": 19,
+     "phonesKnowingABlockage": 2546,
+     "reports": 581,
+     "meetings": 53605,
+     "modelVersion": 3,
+     "massUploaded": 214.7,
+     "auc": {
+      "shared": 0.52,
+      "pooled": 0.68,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 90,
+     "arrived": 2454,
+     "moving": 238,
+     "home": 559,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.782,
+     "meanSpeed": 2.77,
+     "discoveries": 632,
+     "trulyBlocked": 42,
+     "agencyKnowsBlocked": 18,
+     "phonesKnowBlocked": 20,
+     "phonesKnowingABlockage": 2644,
+     "reports": 626,
+     "meetings": 62148,
+     "modelVersion": 3,
+     "massUploaded": 265.4,
+     "auc": {
+      "shared": 0.55,
+      "pooled": 0.534,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 105,
+     "arrived": 2548,
+     "moving": 234,
+     "home": 469,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.812,
+     "meanSpeed": 2.33,
+     "discoveries": 660,
+     "trulyBlocked": 47,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 2717,
+     "reports": 658,
+     "meetings": 71436,
+     "modelVersion": 4,
+     "massUploaded": 296.8,
+     "auc": {
+      "shared": 0.647,
+      "pooled": 0.688,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 120,
+     "arrived": 2622,
+     "moving": 228,
+     "home": 401,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.846,
+     "meanSpeed": 1.61,
+     "discoveries": 683,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 2774,
+     "reports": 683,
+     "meetings": 80363,
+     "modelVersion": 4,
+     "massUploaded": 323.9,
+     "auc": {
+      "shared": 0.516,
+      "pooled": 0.627,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 135,
+     "arrived": 2672,
+     "moving": 228,
+     "home": 351,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.842,
+     "meanSpeed": 1.46,
+     "discoveries": 698,
+     "trulyBlocked": 52,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 23,
+     "phonesKnowingABlockage": 2809,
+     "reports": 704,
+     "meetings": 89705,
+     "modelVersion": 5,
+     "massUploaded": 363.6,
+     "auc": {
+      "shared": 0.635,
+      "pooled": 0.775,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 150,
+     "arrived": 2725,
+     "moving": 222,
+     "home": 304,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.86,
+     "meanSpeed": 1.34,
+     "discoveries": 712,
+     "trulyBlocked": 52,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 23,
+     "phonesKnowingABlockage": 2846,
+     "reports": 721,
+     "meetings": 98853,
+     "modelVersion": 5,
+     "massUploaded": 363.6,
+     "auc": {
+      "shared": 0.571,
+      "pooled": 0.623,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 165,
+     "arrived": 2764,
+     "moving": 222,
+     "home": 265,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.883,
+     "meanSpeed": 1.26,
+     "discoveries": 720,
+     "trulyBlocked": 54,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 23,
+     "phonesKnowingABlockage": 2876,
+     "reports": 733,
+     "meetings": 108393,
+     "modelVersion": 5,
+     "massUploaded": 381.5,
+     "auc": {
+      "shared": 0.725,
+      "pooled": 0.605,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 180,
+     "arrived": 2801,
+     "moving": 217,
+     "home": 233,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.894,
+     "meanSpeed": 0.85,
+     "discoveries": 733,
+     "trulyBlocked": 57,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 23,
+     "phonesKnowingABlockage": 2901,
+     "reports": 745,
+     "meetings": 117683,
+     "modelVersion": 5,
+     "massUploaded": 394.3,
+     "auc": {
+      "shared": 0.693,
+      "pooled": 0.595,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 195,
+     "arrived": 2826,
+     "moving": 211,
+     "home": 214,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.91,
+     "meanSpeed": 0.57,
+     "discoveries": 741,
+     "trulyBlocked": 60,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 24,
+     "phonesKnowingABlockage": 2921,
+     "reports": 755,
+     "meetings": 127332,
+     "modelVersion": 5,
+     "massUploaded": 432.2,
+     "auc": {
+      "shared": 0.6,
+      "pooled": 0.594,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 210,
+     "arrived": 2845,
+     "moving": 211,
+     "home": 195,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.943,
+     "meanSpeed": 0.52,
+     "discoveries": 746,
+     "trulyBlocked": 62,
+     "agencyKnowsBlocked": 22,
+     "phonesKnowBlocked": 24,
+     "phonesKnowingABlockage": 2934,
+     "reports": 761,
+     "meetings": 136758,
+     "modelVersion": 6,
+     "massUploaded": 447.7,
+     "auc": {
+      "shared": 0.485,
+      "pooled": 0.547,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 225,
+     "arrived": 2865,
+     "moving": 217,
+     "home": 169,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.899,
+     "meanSpeed": 0.7,
+     "discoveries": 758,
+     "trulyBlocked": 66,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 2952,
+     "reports": 771,
+     "meetings": 146512,
+     "modelVersion": 6,
+     "massUploaded": 447.7,
+     "auc": {
+      "shared": 0.512,
+      "pooled": 0.421,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 240,
+     "arrived": 2886,
+     "moving": 213,
+     "home": 152,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.906,
+     "meanSpeed": 0.47,
+     "discoveries": 764,
+     "trulyBlocked": 68,
+     "agencyKnowsBlocked": 22,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 2964,
+     "reports": 782,
+     "meetings": 156064,
+     "modelVersion": 6,
+     "massUploaded": 447.7,
+     "auc": {
+      "shared": 0.461,
+      "pooled": 0.586,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 255,
+     "arrived": 2895,
+     "moving": 212,
+     "home": 144,
+     "waiting": 307,
+     "overrun": 1,
+     "jammedShare": 0.929,
+     "meanSpeed": 0.34,
+     "discoveries": 770,
+     "trulyBlocked": 84,
+     "agencyKnowsBlocked": 24,
+     "phonesKnowBlocked": 29,
+     "phonesKnowingABlockage": 2970,
+     "reports": 787,
+     "meetings": 165886,
+     "modelVersion": 6,
+     "massUploaded": 447.7,
+     "auc": {
+      "shared": 0.532,
+      "pooled": 0.625,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 270,
+     "arrived": 2905,
+     "moving": 198,
+     "home": 129,
+     "waiting": 301,
+     "overrun": 26,
+     "jammedShare": 0.909,
+     "meanSpeed": 0.53,
+     "discoveries": 789,
+     "trulyBlocked": 95,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 31,
+     "phonesKnowingABlockage": 2980,
+     "reports": 800,
+     "meetings": 175481,
+     "modelVersion": 6,
+     "massUploaded": 447.7,
+     "auc": {
+      "shared": 0.689,
+      "pooled": 0.755,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 285,
+     "arrived": 2918,
+     "moving": 180,
+     "home": 113,
+     "waiting": 300,
+     "overrun": 48,
+     "jammedShare": 0.889,
+     "meanSpeed": 0.58,
+     "discoveries": 797,
+     "trulyBlocked": 101,
+     "agencyKnowsBlocked": 27,
+     "phonesKnowBlocked": 32,
+     "phonesKnowingABlockage": 2986,
+     "reports": 809,
+     "meetings": 185050,
+     "modelVersion": 6,
+     "massUploaded": 454.9,
+     "auc": {
+      "shared": 0.595,
+      "pooled": 0.7,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 300,
+     "arrived": 2924,
+     "moving": 133,
+     "home": 105,
+     "waiting": 294,
+     "overrun": 103,
+     "jammedShare": 0.91,
+     "meanSpeed": 0.38,
+     "discoveries": 829,
+     "trulyBlocked": 112,
+     "agencyKnowsBlocked": 33,
+     "phonesKnowBlocked": 38,
+     "phonesKnowingABlockage": 2996,
+     "reports": 837,
+     "meetings": 194353,
+     "modelVersion": 6,
+     "massUploaded": 466,
+     "auc": {
+      "shared": 0.635,
+      "pooled": 0.73,
+      "initial": 0.5
+     }
+    }
+   ],
+   "final": {
+    "arrived": 2924,
+    "overrun": 103,
+    "waitingForHelp": 294,
+    "discoveries": 829,
+    "travelMedian": 6.516666666666667,
+    "travelP90": 12.166666666666666,
+    "trulyBlocked": 112,
+    "agencyKnowsBlocked": 33,
+    "phonesKnowBlocked": 38,
+    "agencyShareOfSeen": 0.868421052631579,
+    "agencyWrongBlocked": 0,
+    "reportLatencyMinutes": {
+     "median": 15.582632191975911,
+     "p5": 4.008333333333334,
+     "p95": 108.376722462972,
+     "n": 35
+    },
+    "modelVersion": 6,
+    "massUploaded": 466.0244746690751,
+    "auc": {
+     "shared": 0.6349076497963932,
+     "initial": 0.5,
+     "pooled": 0.7297302210587551
+    },
+    "phonesContributing": 2439,
+    "bottlenecks": [
+     {
+      "street": "Arroyo Boulevard",
+      "segment": "279681067-1361143628-0",
+      "carsThrough": 653,
+      "meanSpeedKph": 5.8,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122925331-13480852867-0",
+      "carsThrough": 717,
+      "meanSpeedKph": 23.3,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "Windsor Avenue",
+      "segment": "279678235-11284984284-0",
+      "carsThrough": 959,
+      "meanSpeedKph": 26.9,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-122925331-0",
+      "carsThrough": 718,
+      "meanSpeedKph": 24.3,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-13480920309-0",
+      "carsThrough": 651,
+      "meanSpeedKph": 24.2,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "Foothill Freeway",
+      "segment": "316291115-316291640-0",
+      "carsThrough": 727,
+      "meanSpeedKph": 77.5,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-364284520-0",
+      "carsThrough": 598,
+      "meanSpeedKph": 42.6,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "Arroyo Boulevard",
+      "segment": "1361143628-13480920309-0",
+      "carsThrough": 1611,
+      "meanSpeedKph": 38.8,
+      "freeSpeedKph": 54.7
+     }
+    ],
+    "maxContributionsPerPhone": 6
+   }
+  },
+  {
+   "seed": 1,
+   "mesh": false,
+   "households": 3497,
+   "seconds": 9.555,
+   "timeline": [
+    {
+     "minute": 15,
+     "arrived": 78,
+     "moving": 418,
+     "home": 2672,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.11,
+     "meanSpeed": 12.67,
+     "discoveries": 69,
+     "trulyBlocked": 32,
+     "agencyKnowsBlocked": 5,
+     "phonesKnowBlocked": 10,
+     "phonesKnowingABlockage": 98,
+     "reports": 9,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.668,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 30,
+     "arrived": 1045,
+     "moving": 477,
+     "home": 1646,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.252,
+     "meanSpeed": 10.75,
+     "discoveries": 353,
+     "trulyBlocked": 35,
+     "agencyKnowsBlocked": 12,
+     "phonesKnowBlocked": 14,
+     "phonesKnowingABlockage": 385,
+     "reports": 252,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.561,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 45,
+     "arrived": 1725,
+     "moving": 351,
+     "home": 1092,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.379,
+     "meanSpeed": 8.88,
+     "discoveries": 561,
+     "trulyBlocked": 39,
+     "agencyKnowsBlocked": 15,
+     "phonesKnowBlocked": 15,
+     "phonesKnowingABlockage": 588,
+     "reports": 493,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.622,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 60,
+     "arrived": 2096,
+     "moving": 253,
+     "home": 819,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.561,
+     "meanSpeed": 6.22,
+     "discoveries": 665,
+     "trulyBlocked": 42,
+     "agencyKnowsBlocked": 16,
+     "phonesKnowBlocked": 16,
+     "phonesKnowingABlockage": 685,
+     "reports": 603,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.525,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 75,
+     "arrived": 2290,
+     "moving": 222,
+     "home": 656,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.662,
+     "meanSpeed": 4.69,
+     "discoveries": 715,
+     "trulyBlocked": 45,
+     "agencyKnowsBlocked": 16,
+     "phonesKnowBlocked": 16,
+     "phonesKnowingABlockage": 734,
+     "reports": 670,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.765,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 90,
+     "arrived": 2416,
+     "moving": 197,
+     "home": 555,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.772,
+     "meanSpeed": 3.22,
+     "discoveries": 766,
+     "trulyBlocked": 47,
+     "agencyKnowsBlocked": 17,
+     "phonesKnowBlocked": 17,
+     "phonesKnowingABlockage": 784,
+     "reports": 715,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.669,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 105,
+     "arrived": 2502,
+     "moving": 195,
+     "home": 471,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.754,
+     "meanSpeed": 3.01,
+     "discoveries": 801,
+     "trulyBlocked": 47,
+     "agencyKnowsBlocked": 17,
+     "phonesKnowBlocked": 18,
+     "phonesKnowingABlockage": 816,
+     "reports": 747,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.615,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 120,
+     "arrived": 2568,
+     "moving": 185,
+     "home": 415,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.87,
+     "meanSpeed": 1.3,
+     "discoveries": 820,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 18,
+     "phonesKnowBlocked": 18,
+     "phonesKnowingABlockage": 834,
+     "reports": 764,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.557,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 135,
+     "arrived": 2615,
+     "moving": 192,
+     "home": 361,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.844,
+     "meanSpeed": 1.63,
+     "discoveries": 845,
+     "trulyBlocked": 52,
+     "agencyKnowsBlocked": 18,
+     "phonesKnowBlocked": 19,
+     "phonesKnowingABlockage": 857,
+     "reports": 779,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.646,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 150,
+     "arrived": 2661,
+     "moving": 193,
+     "home": 314,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.845,
+     "meanSpeed": 1.74,
+     "discoveries": 864,
+     "trulyBlocked": 55,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 20,
+     "phonesKnowingABlockage": 873,
+     "reports": 793,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.683,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 165,
+     "arrived": 2696,
+     "moving": 183,
+     "home": 289,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.907,
+     "meanSpeed": 0.8,
+     "discoveries": 890,
+     "trulyBlocked": 57,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 20,
+     "phonesKnowingABlockage": 897,
+     "reports": 816,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.739,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 180,
+     "arrived": 2724,
+     "moving": 184,
+     "home": 260,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.913,
+     "meanSpeed": 1,
+     "discoveries": 905,
+     "trulyBlocked": 60,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 20,
+     "phonesKnowingABlockage": 910,
+     "reports": 833,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.728,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 195,
+     "arrived": 2751,
+     "moving": 185,
+     "home": 232,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.914,
+     "meanSpeed": 0.82,
+     "discoveries": 926,
+     "trulyBlocked": 62,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 23,
+     "phonesKnowingABlockage": 928,
+     "reports": 845,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.573,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 210,
+     "arrived": 2772,
+     "moving": 187,
+     "home": 209,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.909,
+     "meanSpeed": 0.68,
+     "discoveries": 945,
+     "trulyBlocked": 65,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 23,
+     "phonesKnowingABlockage": 940,
+     "reports": 861,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.649,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 225,
+     "arrived": 2796,
+     "moving": 185,
+     "home": 187,
+     "waiting": 329,
+     "overrun": 0,
+     "jammedShare": 0.924,
+     "meanSpeed": 0.66,
+     "discoveries": 961,
+     "trulyBlocked": 70,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 956,
+     "reports": 880,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.676,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 240,
+     "arrived": 2816,
+     "moving": 181,
+     "home": 168,
+     "waiting": 329,
+     "overrun": 3,
+     "jammedShare": 0.928,
+     "meanSpeed": 0.49,
+     "discoveries": 975,
+     "trulyBlocked": 76,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 968,
+     "reports": 897,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.706,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 255,
+     "arrived": 2832,
+     "moving": 186,
+     "home": 147,
+     "waiting": 328,
+     "overrun": 4,
+     "jammedShare": 0.914,
+     "meanSpeed": 0.75,
+     "discoveries": 992,
+     "trulyBlocked": 88,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 29,
+     "phonesKnowingABlockage": 982,
+     "reports": 912,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.744,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 270,
+     "arrived": 2849,
+     "moving": 174,
+     "home": 133,
+     "waiting": 320,
+     "overrun": 21,
+     "jammedShare": 0.925,
+     "meanSpeed": 0.59,
+     "discoveries": 1011,
+     "trulyBlocked": 99,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 32,
+     "phonesKnowingABlockage": 996,
+     "reports": 927,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.682,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 285,
+     "arrived": 2861,
+     "moving": 175,
+     "home": 120,
+     "waiting": 319,
+     "overrun": 22,
+     "jammedShare": 0.931,
+     "meanSpeed": 0.47,
+     "discoveries": 1020,
+     "trulyBlocked": 113,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 33,
+     "phonesKnowingABlockage": 1004,
+     "reports": 935,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.827,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 300,
+     "arrived": 2872,
+     "moving": 168,
+     "home": 114,
+     "waiting": 310,
+     "overrun": 33,
+     "jammedShare": 0.952,
+     "meanSpeed": 0.14,
+     "discoveries": 1027,
+     "trulyBlocked": 120,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 34,
+     "phonesKnowingABlockage": 1011,
+     "reports": 942,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.846,
+      "initial": 0.5
+     }
+    }
+   ],
+   "final": {
+    "arrived": 2872,
+    "overrun": 33,
+    "waitingForHelp": 310,
+    "discoveries": 1027,
+    "travelMedian": 6.308333333333334,
+    "travelP90": 10.525,
+    "trulyBlocked": 120,
+    "agencyKnowsBlocked": 19,
+    "phonesKnowBlocked": 34,
+    "agencyShareOfSeen": 0.5588235294117647,
+    "agencyWrongBlocked": 0,
+    "reportLatencyMinutes": {
+     "median": 16.008333333333333,
+     "p5": 7.467878468831373,
+     "p95": 32.00833333333333,
+     "n": 22
+    },
+    "modelVersion": 0,
+    "massUploaded": 0,
+    "auc": {
+     "shared": 0.5,
+     "initial": 0.5,
+     "pooled": 0.8464137613269851
+    },
+    "phonesContributing": 2313,
+    "bottlenecks": [
+     {
+      "street": "unnamed road",
+      "segment": "279681067-13480920309-0",
+      "carsThrough": 839,
+      "meanSpeedKph": 24.9,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-322564299-0",
+      "carsThrough": 888,
+      "meanSpeedKph": 15.9,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "Windsor Avenue",
+      "segment": "279678235-11284984284-0",
+      "carsThrough": 834,
+      "meanSpeedKph": 28.9,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "123186718-322564299-0",
+      "carsThrough": 498,
+      "meanSpeedKph": 26.8,
+      "freeSpeedKph": 39
+     },
+     {
+      "street": "Lincoln Avenue",
+      "segment": "20827746-322565389-0",
+      "carsThrough": 1503,
+      "meanSpeedKph": 37.3,
+      "freeSpeedKph": 56.3
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-122925331-0",
+      "carsThrough": 373,
+      "meanSpeedKph": 27.6,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "Lincoln Avenue",
+      "segment": "25712882-4048407100-0",
+      "carsThrough": 613,
+      "meanSpeedKph": 31.8,
+      "freeSpeedKph": 56.3
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122925331-13480852867-0",
+      "carsThrough": 371,
+      "meanSpeedKph": 40.7,
+      "freeSpeedKph": 48.3
+     }
+    ],
+    "maxContributionsPerPhone": 1
+   }
+  },
+  {
+   "seed": 2,
+   "mesh": false,
+   "households": 3503,
+   "seconds": 24.88,
+   "timeline": [
+    {
+     "minute": 15,
+     "arrived": 89,
+     "moving": 400,
+     "home": 2675,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.255,
+     "meanSpeed": 10.16,
+     "discoveries": 73,
+     "trulyBlocked": 46,
+     "agencyKnowsBlocked": 9,
+     "phonesKnowBlocked": 15,
+     "phonesKnowingABlockage": 100,
+     "reports": 20,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.523,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 30,
+     "arrived": 821,
+     "moving": 687,
+     "home": 1656,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.457,
+     "meanSpeed": 7.64,
+     "discoveries": 298,
+     "trulyBlocked": 48,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 24,
+     "phonesKnowingABlockage": 422,
+     "reports": 260,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.67,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 45,
+     "arrived": 1484,
+     "moving": 580,
+     "home": 1100,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.652,
+     "meanSpeed": 4.46,
+     "discoveries": 493,
+     "trulyBlocked": 52,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 29,
+     "phonesKnowingABlockage": 673,
+     "reports": 578,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.553,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 60,
+     "arrived": 1826,
+     "moving": 519,
+     "home": 819,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.788,
+     "meanSpeed": 2.6,
+     "discoveries": 559,
+     "trulyBlocked": 53,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 30,
+     "phonesKnowingABlockage": 768,
+     "reports": 697,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.699,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 75,
+     "arrived": 2017,
+     "moving": 489,
+     "home": 658,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.873,
+     "meanSpeed": 1.49,
+     "discoveries": 634,
+     "trulyBlocked": 55,
+     "agencyKnowsBlocked": 27,
+     "phonesKnowBlocked": 31,
+     "phonesKnowingABlockage": 854,
+     "reports": 805,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.505,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 90,
+     "arrived": 2112,
+     "moving": 501,
+     "home": 551,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.864,
+     "meanSpeed": 1.74,
+     "discoveries": 682,
+     "trulyBlocked": 59,
+     "agencyKnowsBlocked": 29,
+     "phonesKnowBlocked": 34,
+     "phonesKnowingABlockage": 900,
+     "reports": 855,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.656,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 105,
+     "arrived": 2200,
+     "moving": 490,
+     "home": 474,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.912,
+     "meanSpeed": 1,
+     "discoveries": 713,
+     "trulyBlocked": 64,
+     "agencyKnowsBlocked": 29,
+     "phonesKnowBlocked": 35,
+     "phonesKnowingABlockage": 945,
+     "reports": 906,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.668,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 120,
+     "arrived": 2259,
+     "moving": 476,
+     "home": 429,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.939,
+     "meanSpeed": 0.67,
+     "discoveries": 737,
+     "trulyBlocked": 67,
+     "agencyKnowsBlocked": 30,
+     "phonesKnowBlocked": 36,
+     "phonesKnowingABlockage": 973,
+     "reports": 940,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.47,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 135,
+     "arrived": 2306,
+     "moving": 485,
+     "home": 373,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.893,
+     "meanSpeed": 1.19,
+     "discoveries": 765,
+     "trulyBlocked": 68,
+     "agencyKnowsBlocked": 30,
+     "phonesKnowBlocked": 37,
+     "phonesKnowingABlockage": 1003,
+     "reports": 970,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.6,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 150,
+     "arrived": 2378,
+     "moving": 458,
+     "home": 328,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.945,
+     "meanSpeed": 0.37,
+     "discoveries": 787,
+     "trulyBlocked": 69,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 38,
+     "phonesKnowingABlockage": 1029,
+     "reports": 1017,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.63,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 165,
+     "arrived": 2410,
+     "moving": 462,
+     "home": 292,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.944,
+     "meanSpeed": 0.59,
+     "discoveries": 802,
+     "trulyBlocked": 72,
+     "agencyKnowsBlocked": 33,
+     "phonesKnowBlocked": 39,
+     "phonesKnowingABlockage": 1048,
+     "reports": 1037,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.467,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 180,
+     "arrived": 2435,
+     "moving": 461,
+     "home": 268,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.95,
+     "meanSpeed": 0.36,
+     "discoveries": 812,
+     "trulyBlocked": 76,
+     "agencyKnowsBlocked": 33,
+     "phonesKnowBlocked": 39,
+     "phonesKnowingABlockage": 1056,
+     "reports": 1048,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.544,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 195,
+     "arrived": 2456,
+     "moving": 468,
+     "home": 240,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.938,
+     "meanSpeed": 0.57,
+     "discoveries": 824,
+     "trulyBlocked": 78,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 41,
+     "phonesKnowingABlockage": 1066,
+     "reports": 1056,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.648,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 210,
+     "arrived": 2482,
+     "moving": 469,
+     "home": 213,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.94,
+     "meanSpeed": 0.45,
+     "discoveries": 835,
+     "trulyBlocked": 81,
+     "agencyKnowsBlocked": 33,
+     "phonesKnowBlocked": 42,
+     "phonesKnowingABlockage": 1075,
+     "reports": 1068,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.584,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 225,
+     "arrived": 2504,
+     "moving": 465,
+     "home": 195,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.959,
+     "meanSpeed": 0.3,
+     "discoveries": 842,
+     "trulyBlocked": 83,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 42,
+     "phonesKnowingABlockage": 1088,
+     "reports": 1085,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.626,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 240,
+     "arrived": 2521,
+     "moving": 464,
+     "home": 179,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.961,
+     "meanSpeed": 0.33,
+     "discoveries": 863,
+     "trulyBlocked": 85,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 43,
+     "phonesKnowingABlockage": 1100,
+     "reports": 1101,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.549,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 255,
+     "arrived": 2538,
+     "moving": 473,
+     "home": 153,
+     "waiting": 339,
+     "overrun": 0,
+     "jammedShare": 0.951,
+     "meanSpeed": 0.29,
+     "discoveries": 873,
+     "trulyBlocked": 93,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 47,
+     "phonesKnowingABlockage": 1109,
+     "reports": 1109,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.616,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 270,
+     "arrived": 2550,
+     "moving": 437,
+     "home": 135,
+     "waiting": 330,
+     "overrun": 51,
+     "jammedShare": 0.963,
+     "meanSpeed": 0.1,
+     "discoveries": 893,
+     "trulyBlocked": 102,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 52,
+     "phonesKnowingABlockage": 1119,
+     "reports": 1114,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.708,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 285,
+     "arrived": 2555,
+     "moving": 445,
+     "home": 122,
+     "waiting": 328,
+     "overrun": 53,
+     "jammedShare": 0.955,
+     "meanSpeed": 0.22,
+     "discoveries": 898,
+     "trulyBlocked": 110,
+     "agencyKnowsBlocked": 32,
+     "phonesKnowBlocked": 54,
+     "phonesKnowingABlockage": 1123,
+     "reports": 1117,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.711,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 300,
+     "arrived": 2569,
+     "moving": 428,
+     "home": 107,
+     "waiting": 321,
+     "overrun": 78,
+     "jammedShare": 0.956,
+     "meanSpeed": 0.26,
+     "discoveries": 908,
+     "trulyBlocked": 118,
+     "agencyKnowsBlocked": 31,
+     "phonesKnowBlocked": 58,
+     "phonesKnowingABlockage": 1130,
+     "reports": 1122,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.693,
+      "initial": 0.5
+     }
+    }
+   ],
+   "final": {
+    "arrived": 2569,
+    "overrun": 78,
+    "waitingForHelp": 321,
+    "discoveries": 908,
+    "travelMedian": 6.258333333333334,
+    "travelP90": 9.933333333333334,
+    "trulyBlocked": 118,
+    "agencyKnowsBlocked": 31,
+    "phonesKnowBlocked": 58,
+    "agencyShareOfSeen": 0.5344827586206896,
+    "agencyWrongBlocked": 0,
+    "reportLatencyMinutes": {
+     "median": 20.4243413289388,
+     "p5": 4.148164876302076,
+     "p95": 202.00833333333333,
+     "n": 38
+    },
+    "modelVersion": 0,
+    "massUploaded": 0,
+    "auc": {
+     "shared": 0.5,
+     "initial": 0.5,
+     "pooled": 0.6926428394318302
+    },
+    "phonesContributing": 2301,
+    "bottlenecks": [
+     {
+      "street": "North Lincoln Avenue",
+      "segment": "122679570-122679574-0",
+      "carsThrough": 628,
+      "meanSpeedKph": 7,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122925331-13480852867-0",
+      "carsThrough": 880,
+      "meanSpeedKph": 33,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-13480920309-0",
+      "carsThrough": 655,
+      "meanSpeedKph": 27.3,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "Windsor Avenue",
+      "segment": "279678235-11284984284-0",
+      "carsThrough": 646,
+      "meanSpeedKph": 30.8,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "Florecita Crescent",
+      "segment": "123069485-123069488-0",
+      "carsThrough": 97,
+      "meanSpeedKph": 0.1,
+      "freeSpeedKph": 39
+     },
+     {
+      "street": "Lincoln Avenue",
+      "segment": "25712882-4048407100-0",
+      "carsThrough": 546,
+      "meanSpeedKph": 31.6,
+      "freeSpeedKph": 56.3
+     },
+     {
+      "street": "North Lake Avenue",
+      "segment": "451041190-451041195-0",
+      "carsThrough": 66,
+      "meanSpeedKph": 0.3,
+      "freeSpeedKph": 56.3
+     },
+     {
+      "street": "El Molino Avenue",
+      "segment": "123202122-123527310-0",
+      "carsThrough": 62,
+      "meanSpeedKph": 0.6,
+      "freeSpeedKph": 48.3
+     }
+    ],
+    "maxContributionsPerPhone": 1
+   }
+  },
+  {
+   "seed": 3,
+   "mesh": false,
+   "households": 3548,
+   "seconds": 5.487,
+   "timeline": [
+    {
+     "minute": 15,
+     "arrived": 99,
+     "moving": 413,
+     "home": 2720,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.111,
+     "meanSpeed": 12.28,
+     "discoveries": 114,
+     "trulyBlocked": 42,
+     "agencyKnowsBlocked": 6,
+     "phonesKnowBlocked": 15,
+     "phonesKnowingABlockage": 133,
+     "reports": 13,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.525,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 30,
+     "arrived": 1098,
+     "moving": 491,
+     "home": 1643,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.122,
+     "meanSpeed": 11.87,
+     "discoveries": 498,
+     "trulyBlocked": 43,
+     "agencyKnowsBlocked": 21,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 451,
+     "reports": 475,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.644,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 45,
+     "arrived": 1847,
+     "moving": 284,
+     "home": 1101,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.229,
+     "meanSpeed": 11.03,
+     "discoveries": 728,
+     "trulyBlocked": 45,
+     "agencyKnowsBlocked": 23,
+     "phonesKnowBlocked": 23,
+     "phonesKnowingABlockage": 615,
+     "reports": 911,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.618,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 60,
+     "arrived": 2229,
+     "moving": 184,
+     "home": 819,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.38,
+     "meanSpeed": 8.8,
+     "discoveries": 839,
+     "trulyBlocked": 48,
+     "agencyKnowsBlocked": 24,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 701,
+     "reports": 1113,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.621,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 75,
+     "arrived": 2433,
+     "moving": 142,
+     "home": 657,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.451,
+     "meanSpeed": 7.08,
+     "discoveries": 907,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 25,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 749,
+     "reports": 1240,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.681,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 90,
+     "arrived": 2573,
+     "moving": 117,
+     "home": 542,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.59,
+     "meanSpeed": 5.26,
+     "discoveries": 959,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 26,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 784,
+     "reports": 1311,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.787,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 105,
+     "arrived": 2662,
+     "moving": 103,
+     "home": 467,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.631,
+     "meanSpeed": 3.72,
+     "discoveries": 995,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 26,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 808,
+     "reports": 1382,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.734,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 120,
+     "arrived": 2722,
+     "moving": 100,
+     "home": 410,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.68,
+     "meanSpeed": 4.01,
+     "discoveries": 1010,
+     "trulyBlocked": 51,
+     "agencyKnowsBlocked": 26,
+     "phonesKnowBlocked": 26,
+     "phonesKnowingABlockage": 823,
+     "reports": 1422,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.658,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 135,
+     "arrived": 2780,
+     "moving": 100,
+     "home": 352,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.71,
+     "meanSpeed": 3.53,
+     "discoveries": 1039,
+     "trulyBlocked": 53,
+     "agencyKnowsBlocked": 26,
+     "phonesKnowBlocked": 27,
+     "phonesKnowingABlockage": 838,
+     "reports": 1452,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.66,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 150,
+     "arrived": 2831,
+     "moving": 97,
+     "home": 304,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.742,
+     "meanSpeed": 3.1,
+     "discoveries": 1048,
+     "trulyBlocked": 60,
+     "agencyKnowsBlocked": 27,
+     "phonesKnowBlocked": 28,
+     "phonesKnowingABlockage": 849,
+     "reports": 1481,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.692,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 165,
+     "arrived": 2864,
+     "moving": 97,
+     "home": 271,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.835,
+     "meanSpeed": 2.04,
+     "discoveries": 1062,
+     "trulyBlocked": 63,
+     "agencyKnowsBlocked": 27,
+     "phonesKnowBlocked": 28,
+     "phonesKnowingABlockage": 858,
+     "reports": 1502,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.691,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 180,
+     "arrived": 2887,
+     "moving": 92,
+     "home": 253,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.804,
+     "meanSpeed": 2.53,
+     "discoveries": 1075,
+     "trulyBlocked": 65,
+     "agencyKnowsBlocked": 27,
+     "phonesKnowBlocked": 30,
+     "phonesKnowingABlockage": 869,
+     "reports": 1513,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.727,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 195,
+     "arrived": 2922,
+     "moving": 93,
+     "home": 217,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.828,
+     "meanSpeed": 1.89,
+     "discoveries": 1087,
+     "trulyBlocked": 69,
+     "agencyKnowsBlocked": 29,
+     "phonesKnowBlocked": 31,
+     "phonesKnowingABlockage": 876,
+     "reports": 1532,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.656,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 210,
+     "arrived": 2947,
+     "moving": 93,
+     "home": 192,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.817,
+     "meanSpeed": 2.15,
+     "discoveries": 1094,
+     "trulyBlocked": 76,
+     "agencyKnowsBlocked": 29,
+     "phonesKnowBlocked": 32,
+     "phonesKnowingABlockage": 885,
+     "reports": 1552,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.556,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 225,
+     "arrived": 2973,
+     "moving": 94,
+     "home": 165,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.777,
+     "meanSpeed": 2.58,
+     "discoveries": 1101,
+     "trulyBlocked": 83,
+     "agencyKnowsBlocked": 30,
+     "phonesKnowBlocked": 35,
+     "phonesKnowingABlockage": 896,
+     "reports": 1565,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.561,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 240,
+     "arrived": 2993,
+     "moving": 86,
+     "home": 153,
+     "waiting": 316,
+     "overrun": 0,
+     "jammedShare": 0.86,
+     "meanSpeed": 1,
+     "discoveries": 1106,
+     "trulyBlocked": 87,
+     "agencyKnowsBlocked": 31,
+     "phonesKnowBlocked": 36,
+     "phonesKnowingABlockage": 900,
+     "reports": 1577,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.635,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 255,
+     "arrived": 3003,
+     "moving": 95,
+     "home": 134,
+     "waiting": 315,
+     "overrun": 1,
+     "jammedShare": 0.821,
+     "meanSpeed": 1.5,
+     "discoveries": 1119,
+     "trulyBlocked": 99,
+     "agencyKnowsBlocked": 31,
+     "phonesKnowBlocked": 38,
+     "phonesKnowingABlockage": 907,
+     "reports": 1580,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.627,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 270,
+     "arrived": 3027,
+     "moving": 83,
+     "home": 109,
+     "waiting": 304,
+     "overrun": 25,
+     "jammedShare": 0.843,
+     "meanSpeed": 1.6,
+     "discoveries": 1136,
+     "trulyBlocked": 113,
+     "agencyKnowsBlocked": 33,
+     "phonesKnowBlocked": 39,
+     "phonesKnowingABlockage": 921,
+     "reports": 1601,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.758,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 285,
+     "arrived": 3038,
+     "moving": 77,
+     "home": 101,
+     "waiting": 300,
+     "overrun": 32,
+     "jammedShare": 0.87,
+     "meanSpeed": 0.6,
+     "discoveries": 1139,
+     "trulyBlocked": 128,
+     "agencyKnowsBlocked": 34,
+     "phonesKnowBlocked": 42,
+     "phonesKnowingABlockage": 926,
+     "reports": 1618,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.781,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 300,
+     "arrived": 3044,
+     "moving": 78,
+     "home": 91,
+     "waiting": 292,
+     "overrun": 43,
+     "jammedShare": 0.91,
+     "meanSpeed": 0.26,
+     "discoveries": 1144,
+     "trulyBlocked": 138,
+     "agencyKnowsBlocked": 34,
+     "phonesKnowBlocked": 43,
+     "phonesKnowingABlockage": 932,
+     "reports": 1625,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.758,
+      "initial": 0.5
+     }
+    }
+   ],
+   "final": {
+    "arrived": 3044,
+    "overrun": 43,
+    "waitingForHelp": 292,
+    "discoveries": 1144,
+    "travelMedian": 6.525,
+    "travelP90": 11.941666666666666,
+    "trulyBlocked": 138,
+    "agencyKnowsBlocked": 34,
+    "phonesKnowBlocked": 43,
+    "agencyShareOfSeen": 0.7906976744186046,
+    "agencyWrongBlocked": 0,
+    "reportLatencyMinutes": {
+     "median": 16.008333333333333,
+     "p5": 4.008333333333334,
+     "p95": 67.99199117024739,
+     "n": 35
+    },
+    "modelVersion": 0,
+    "massUploaded": 0,
+    "auc": {
+     "shared": 0.5,
+     "initial": 0.5,
+     "pooled": 0.7582314611924806
+    },
+    "phonesContributing": 2433,
+    "bottlenecks": [
+     {
+      "street": "Windsor Avenue",
+      "segment": "279678235-11284984284-0",
+      "carsThrough": 911,
+      "meanSpeedKph": 23.9,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-13480920309-0",
+      "carsThrough": 915,
+      "meanSpeedKph": 24.9,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122925331-13480852867-0",
+      "carsThrough": 779,
+      "meanSpeedKph": 27.3,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-122925331-0",
+      "carsThrough": 780,
+      "meanSpeedKph": 27.5,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-322564299-0",
+      "carsThrough": 511,
+      "meanSpeedKph": 13.7,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-364284520-0",
+      "carsThrough": 939,
+      "meanSpeedKph": 70.7,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "North Lake Avenue",
+      "segment": "122929088-122929091-0",
+      "carsThrough": 552,
+      "meanSpeedKph": 31.8,
+      "freeSpeedKph": 56.3
+     },
+     {
+      "street": "Lincoln Avenue",
+      "segment": "25712882-4048407100-0",
+      "carsThrough": 553,
+      "meanSpeedKph": 29.4,
+      "freeSpeedKph": 56.3
+     }
+    ],
+    "maxContributionsPerPhone": 1
+   }
+  },
+  {
+   "seed": 4,
+   "mesh": false,
+   "households": 3559,
+   "seconds": 7.504,
+   "timeline": [
+    {
+     "minute": 15,
+     "arrived": 94,
+     "moving": 405,
+     "home": 2752,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.121,
+     "meanSpeed": 11.83,
+     "discoveries": 100,
+     "trulyBlocked": 32,
+     "agencyKnowsBlocked": 5,
+     "phonesKnowBlocked": 11,
+     "phonesKnowingABlockage": 114,
+     "reports": 11,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.444,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 30,
+     "arrived": 1040,
+     "moving": 536,
+     "home": 1675,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.244,
+     "meanSpeed": 9.23,
+     "discoveries": 450,
+     "trulyBlocked": 33,
+     "agencyKnowsBlocked": 11,
+     "phonesKnowBlocked": 13,
+     "phonesKnowingABlockage": 438,
+     "reports": 249,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.514,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 45,
+     "arrived": 1772,
+     "moving": 376,
+     "home": 1103,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.423,
+     "meanSpeed": 7.84,
+     "discoveries": 720,
+     "trulyBlocked": 36,
+     "agencyKnowsBlocked": 15,
+     "phonesKnowBlocked": 16,
+     "phonesKnowingABlockage": 706,
+     "reports": 579,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.567,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 60,
+     "arrived": 2134,
+     "moving": 266,
+     "home": 851,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.602,
+     "meanSpeed": 5.21,
+     "discoveries": 846,
+     "trulyBlocked": 38,
+     "agencyKnowsBlocked": 16,
+     "phonesKnowBlocked": 17,
+     "phonesKnowingABlockage": 809,
+     "reports": 721,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.53,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 75,
+     "arrived": 2333,
+     "moving": 229,
+     "home": 689,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.707,
+     "meanSpeed": 3.52,
+     "discoveries": 922,
+     "trulyBlocked": 41,
+     "agencyKnowsBlocked": 17,
+     "phonesKnowBlocked": 19,
+     "phonesKnowingABlockage": 870,
+     "reports": 829,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.598,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 90,
+     "arrived": 2458,
+     "moving": 222,
+     "home": 571,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.739,
+     "meanSpeed": 3.34,
+     "discoveries": 962,
+     "trulyBlocked": 42,
+     "agencyKnowsBlocked": 17,
+     "phonesKnowBlocked": 19,
+     "phonesKnowingABlockage": 899,
+     "reports": 870,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.539,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 105,
+     "arrived": 2551,
+     "moving": 217,
+     "home": 483,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.77,
+     "meanSpeed": 2.81,
+     "discoveries": 993,
+     "trulyBlocked": 47,
+     "agencyKnowsBlocked": 17,
+     "phonesKnowBlocked": 20,
+     "phonesKnowingABlockage": 926,
+     "reports": 898,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.601,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 120,
+     "arrived": 2626,
+     "moving": 202,
+     "home": 423,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.832,
+     "meanSpeed": 1.76,
+     "discoveries": 1018,
+     "trulyBlocked": 50,
+     "agencyKnowsBlocked": 18,
+     "phonesKnowBlocked": 20,
+     "phonesKnowingABlockage": 948,
+     "reports": 926,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.547,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 135,
+     "arrived": 2675,
+     "moving": 197,
+     "home": 379,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.858,
+     "meanSpeed": 1.55,
+     "discoveries": 1037,
+     "trulyBlocked": 52,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 969,
+     "reports": 943,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.642,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 150,
+     "arrived": 2721,
+     "moving": 192,
+     "home": 338,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.896,
+     "meanSpeed": 0.83,
+     "discoveries": 1057,
+     "trulyBlocked": 52,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 987,
+     "reports": 959,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.615,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 165,
+     "arrived": 2753,
+     "moving": 200,
+     "home": 298,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.855,
+     "meanSpeed": 1.49,
+     "discoveries": 1068,
+     "trulyBlocked": 54,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 997,
+     "reports": 975,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.555,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 180,
+     "arrived": 2795,
+     "moving": 199,
+     "home": 257,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.844,
+     "meanSpeed": 1.65,
+     "discoveries": 1089,
+     "trulyBlocked": 57,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 1013,
+     "reports": 989,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.553,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 195,
+     "arrived": 2830,
+     "moving": 190,
+     "home": 231,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.889,
+     "meanSpeed": 1,
+     "discoveries": 1097,
+     "trulyBlocked": 60,
+     "agencyKnowsBlocked": 19,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 1020,
+     "reports": 1003,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.555,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 210,
+     "arrived": 2852,
+     "moving": 194,
+     "home": 205,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.912,
+     "meanSpeed": 0.96,
+     "discoveries": 1108,
+     "trulyBlocked": 62,
+     "agencyKnowsBlocked": 18,
+     "phonesKnowBlocked": 22,
+     "phonesKnowingABlockage": 1028,
+     "reports": 1009,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.527,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 225,
+     "arrived": 2883,
+     "moving": 191,
+     "home": 177,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.89,
+     "meanSpeed": 1.02,
+     "discoveries": 1118,
+     "trulyBlocked": 66,
+     "agencyKnowsBlocked": 17,
+     "phonesKnowBlocked": 23,
+     "phonesKnowingABlockage": 1039,
+     "reports": 1023,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.412,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 240,
+     "arrived": 2902,
+     "moving": 193,
+     "home": 156,
+     "waiting": 308,
+     "overrun": 0,
+     "jammedShare": 0.896,
+     "meanSpeed": 1.03,
+     "discoveries": 1127,
+     "trulyBlocked": 68,
+     "agencyKnowsBlocked": 18,
+     "phonesKnowBlocked": 25,
+     "phonesKnowingABlockage": 1049,
+     "reports": 1029,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.554,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 255,
+     "arrived": 2920,
+     "moving": 186,
+     "home": 145,
+     "waiting": 307,
+     "overrun": 1,
+     "jammedShare": 0.919,
+     "meanSpeed": 0.73,
+     "discoveries": 1140,
+     "trulyBlocked": 84,
+     "agencyKnowsBlocked": 20,
+     "phonesKnowBlocked": 28,
+     "phonesKnowingABlockage": 1058,
+     "reports": 1042,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.574,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 270,
+     "arrived": 2930,
+     "moving": 166,
+     "home": 136,
+     "waiting": 301,
+     "overrun": 26,
+     "jammedShare": 0.922,
+     "meanSpeed": 0.37,
+     "discoveries": 1157,
+     "trulyBlocked": 95,
+     "agencyKnowsBlocked": 22,
+     "phonesKnowBlocked": 31,
+     "phonesKnowingABlockage": 1062,
+     "reports": 1051,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.728,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 285,
+     "arrived": 2937,
+     "moving": 147,
+     "home": 127,
+     "waiting": 300,
+     "overrun": 48,
+     "jammedShare": 0.912,
+     "meanSpeed": 0.52,
+     "discoveries": 1161,
+     "trulyBlocked": 101,
+     "agencyKnowsBlocked": 23,
+     "phonesKnowBlocked": 33,
+     "phonesKnowingABlockage": 1066,
+     "reports": 1054,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.688,
+      "initial": 0.5
+     }
+    },
+    {
+     "minute": 300,
+     "arrived": 2947,
+     "moving": 109,
+     "home": 112,
+     "waiting": 294,
+     "overrun": 97,
+     "jammedShare": 0.881,
+     "meanSpeed": 1.15,
+     "discoveries": 1185,
+     "trulyBlocked": 112,
+     "agencyKnowsBlocked": 23,
+     "phonesKnowBlocked": 36,
+     "phonesKnowingABlockage": 1073,
+     "reports": 1058,
+     "meetings": 0,
+     "modelVersion": 0,
+     "massUploaded": 0,
+     "auc": {
+      "shared": 0.5,
+      "pooled": 0.719,
+      "initial": 0.5
+     }
+    }
+   ],
+   "final": {
+    "arrived": 2947,
+    "overrun": 97,
+    "waitingForHelp": 294,
+    "discoveries": 1185,
+    "travelMedian": 6.55,
+    "travelP90": 12.5,
+    "trulyBlocked": 112,
+    "agencyKnowsBlocked": 23,
+    "phonesKnowBlocked": 36,
+    "agencyShareOfSeen": 0.6388888888888888,
+    "agencyWrongBlocked": 0,
+    "reportLatencyMinutes": {
+     "median": 18.008333333333333,
+     "p5": 5.844713338216145,
+     "p95": 64.00833333333334,
+     "n": 25
+    },
+    "modelVersion": 0,
+    "massUploaded": 0,
+    "auc": {
+     "shared": 0.5,
+     "initial": 0.5,
+     "pooled": 0.7190408667830134
+    },
+    "phonesContributing": 2430,
+    "bottlenecks": [
+     {
+      "street": "Arroyo Boulevard",
+      "segment": "279681067-1361143628-0",
+      "carsThrough": 903,
+      "meanSpeedKph": 4.7,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122925331-13480852867-0",
+      "carsThrough": 784,
+      "meanSpeedKph": 26.2,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-13480920309-0",
+      "carsThrough": 889,
+      "meanSpeedKph": 24.3,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "Windsor Avenue",
+      "segment": "279678235-11284984284-0",
+      "carsThrough": 882,
+      "meanSpeedKph": 27.5,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "West Howard Street",
+      "segment": "122437556-122925331-0",
+      "carsThrough": 784,
+      "meanSpeedKph": 26.9,
+      "freeSpeedKph": 48.3
+     },
+     {
+      "street": "unnamed road",
+      "segment": "279681067-364284520-0",
+      "carsThrough": 882,
+      "meanSpeedKph": 44.2,
+      "freeSpeedKph": 104.6
+     },
+     {
+      "street": "Arroyo Boulevard",
+      "segment": "1361143628-13480920309-0",
+      "carsThrough": 1787,
+      "meanSpeedKph": 38.5,
+      "freeSpeedKph": 54.7
+     },
+     {
+      "street": "Lincoln Avenue",
+      "segment": "25712882-4048407100-0",
+      "carsThrough": 595,
+      "meanSpeedKph": 27.8,
+      "freeSpeedKph": 56.3
+     }
+    ],
+    "maxContributionsPerPhone": 1
+   }
+  }
+ ]
+}

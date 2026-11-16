@@ -1,0 +1,103 @@
+import * as THREE from "three";
+import type { InkMapData, Point } from "../data";
+import { arrivalMinutesAt, NEVER_BURNS, type FireField } from "../fire-field";
+import type { HazardImpact } from "./types";
+
+// Minutes past its latest burning neighbour that a cell the hazard never reaches is given in the
+// texture, and how close to the hazard's last minute that neighbour must have been reached. See
+// edgeBlended.
+const PAST_THE_EDGE_MINUTES = 10;
+const STILL_ADVANCING_MINUTES = 15;
+
+// A cell the hazard never reaches holds NEVER_BURNS, and the texture's blend from a reached cell's
+// few hundred minutes up to ten thousand crosses any clock minute right beside the reached cell, so
+// where the hazard is still advancing at its last front the edge comes out in the grid's stair steps.
+// There, each unreached cell beside a reached one holds a little past its latest reached neighbour
+// and past the last minute, so it still reads as never reached but the blend crosses partway
+// between cells and the edge runs smoothly. Everywhere else (an island the fire went round, a flank
+// it left long ago) the cell keeps NEVER_BURNS: a softened value there would draw a slow, false
+// front creeping into ground that never burns.
+function edgeBlended(field: FireField) {
+  const { width, height, minutes } = field;
+  const last = field.fronts[field.fronts.length - 1].minutes;
+  const out = Float32Array.from(minutes);
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      if (minutes[row * width + col] < NEVER_BURNS) continue;
+      const latest = latestReachedNeighbour(field, col, row);
+      if (latest !== null && latest >= last - STILL_ADVANCING_MINUTES) out[row * width + col] = Math.max(latest + PAST_THE_EDGE_MINUTES, last + 2);
+    }
+  }
+  return out;
+}
+
+function latestReachedNeighbour({ width, height, minutes }: FireField, col: number, row: number) {
+  let latest: number | null = null;
+  for (let r = Math.max(0, row - 1); r <= Math.min(height - 1, row + 1); r++) {
+    for (let c = Math.max(0, col - 1); c <= Math.min(width - 1, col + 1); c++) {
+      const value = minutes[r * width + c];
+      if (value < NEVER_BURNS) latest = Math.max(latest ?? value, value);
+    }
+  }
+  return latest;
+}
+
+// The arrival field as a half-float texture over its region, for a shader's arrivalMinutes(mapXY)
+// (glsl.ts ARRIVAL_GLSL). Set these three uniforms from it: tArrival, uArrivalRegion, uArrivalLast.
+export function arrivalTexture(field: FireField) {
+  const minutes = edgeBlended(field);
+  const half = new Uint16Array(minutes.length);
+  for (let i = 0; i < half.length; i++) half[i] = THREE.DataUtils.toHalfFloat(minutes[i]);
+  const texture = new THREE.DataTexture(half, field.width, field.height, THREE.RedFormat, THREE.HalfFloatType);
+  texture.magFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+  return {
+    texture,
+    region: new THREE.Vector4(field.region.x0, field.region.y0, field.region.x1, field.region.y1),
+    last: field.fronts[field.fronts.length - 1].minutes,
+  };
+}
+
+const NEVER = Infinity;
+
+// The minute the hazard reaches each building, one half-float texel per building in the 256-wide
+// layout of the building state texture, for the shaders' arrivalAt(uv, mapXY): a building burns as one
+// piece. Set tBuildingFire to it and uBuildingFireOn to 1.
+export function buildingArrivalTexture(data: InkMapData, field: FireField) {
+  const rows = Math.ceil(data.buildings.length / 256);
+  const half = new Uint16Array(256 * rows).fill(THREE.DataUtils.toHalfFloat(NEVER_BURNS));
+  data.buildings.forEach((building, i) => {
+    half[i] = THREE.DataUtils.toHalfFloat(arrivalMinutesAt(field, building.center) ?? NEVER_BURNS);
+  });
+  const texture = new THREE.DataTexture(half, 256, rows, THREE.RedFormat, THREE.HalfFloatType);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+const firstReached = (field: FireField, points: Point[]) =>
+  points.reduce((first, point) => Math.min(first, arrivalMinutesAt(field, point) ?? NEVER), NEVER);
+
+// The minute the hazard first reaches each building's centre, each road and each graph edge.
+// Computed once per field; impactAt answers any minute from it.
+export function arrivalIndex(data: InkMapData, field: FireField) {
+  return {
+    buildings: data.buildings.map((building) => arrivalMinutesAt(field, building.center) ?? NEVER),
+    roads: data.roads.map((road) => firstReached(field, road.path)),
+    edges: data.graph.edges.map((edge) => ({ key: edge.key, minutes: firstReached(field, edge.shape) })),
+  };
+}
+
+export type ArrivalIndex = ReturnType<typeof arrivalIndex>;
+
+const reachedBy = (arrivals: number[], minutes: number) => arrivals.flatMap((arrival, index) => (arrival <= minutes ? [index] : []));
+
+export function impactAt(index: ArrivalIndex, minutes: number): HazardImpact {
+  return {
+    buildings: reachedBy(index.buildings, minutes),
+    roads: reachedBy(index.roads, minutes),
+    edges: index.edges.filter((edge) => edge.minutes <= minutes).map((edge) => edge.key),
+  };
+}
+
+export const NO_IMPACT: HazardImpact = { buildings: [], roads: [], edges: [] };

@@ -1,0 +1,132 @@
+import type WebSocket from "ws";
+import type { Language } from "../agent/script";
+import { Speaker } from "./cartesia";
+import { Delivery, ROUTINE } from "./delivery";
+
+// The agent's mouth on one Twilio call. Turns play in order; each is sent to Cartesia only after the
+// previous one finished generating, so a status change can cut in between turns and a barge-in can
+// drop everything not yet heard.
+
+type Queued = { text: string; language: Language; delivery: Delivery; onStart?: () => void };
+
+const NO_SPACE_BETWEEN_SENTENCES = new Set<Language>(["zh", "ja"]);
+
+// What CallSpeech needs from a text-to-speech engine. Tests pass a fake.
+export type SpeechEngine = Pick<Speaker, "speak" | "cancel" | "close">;
+
+export type TwilioSink = Pick<WebSocket, "send" | "readyState" | "OPEN">;
+
+export class CallSpeech {
+  private queue: Queued[] = [];
+  // The sentence being generated. Set before the request goes out, so there is never a moment
+  // mid-sentence when nothing seems to be playing; contextId arrives once Cartesia has the request.
+  private current: { contextId: string | null } | null = null;
+  private marksOutstanding = 0;
+  private markCounter = 0;
+  private draining = false;
+  private idleWaiters: (() => void)[] = [];
+
+  constructor(
+    private readonly twilio: TwilioSink,
+    private readonly streamSid: string,
+    private readonly speaker: SpeechEngine = new Speaker(),
+  ) {}
+
+  // True from the first queued sentence until Twilio reports the last one has played.
+  get speaking() {
+    return this.queue.length > 0 || this.current !== null || this.marksOutstanding > 0;
+  }
+
+  // One turn is one Cartesia request, so intonation carries across its sentences instead of
+  // resetting at every full stop. A barge-in still cancels it at once; a status cut-in waits for it.
+  // delivery: how urgently Sonic says it (delivery.ts); routine-calm unless the caller says otherwise.
+  say(sentences: string[], language: Language, onFirstAudio?: () => void, delivery: Delivery = ROUTINE) {
+    const text = sentences.filter((sentence) => sentence !== "").join(NO_SPACE_BETWEEN_SENTENCES.has(language) ? "" : " ");
+    if (text !== "") this.queue.push({ text, language, delivery, onStart: onFirstAudio });
+    void this.drain();
+  }
+
+  // A status update: finish the turn that's playing, drop the rest, then say this.
+  cutIn(sentences: string[], language: Language, delivery: Delivery = ROUTINE) {
+    this.queue = [];
+    this.say(sentences, language, undefined, delivery);
+  }
+
+  // The resident started talking: stop audio now and forget anything unsaid.
+  bargeIn() {
+    this.queue = [];
+    // A sentence whose request is still on its way is cancelled when it comes back (see play).
+    const cancelled = this.current?.contextId;
+    this.current = null;
+    if (cancelled) this.speaker.cancel(cancelled);
+    this.send({ event: "clear", streamSid: this.streamSid });
+    this.marksOutstanding = 0;
+    this.notifyIfIdle();
+  }
+
+  // Twilio echoes each mark once the audio before it has played.
+  markPlayed() {
+    this.marksOutstanding = Math.max(0, this.marksOutstanding - 1);
+    this.notifyIfIdle();
+  }
+
+  whenSilent(): Promise<void> {
+    if (!this.speaking) return Promise.resolve();
+    return new Promise((resolve) => this.idleWaiters.push(resolve));
+  }
+
+  close() {
+    this.queue = [];
+    this.speaker.close();
+    this.notifyIfIdle();
+  }
+
+  private async drain() {
+    if (this.draining) return;
+    this.draining = true;
+    try {
+      while (this.queue.length > 0) await this.play(this.queue.shift()!);
+    } finally {
+      this.draining = false;
+      this.notifyIfIdle();
+    }
+  }
+
+  private async play(item: Queued) {
+    const current: { contextId: string | null } = { contextId: null };
+    this.current = current;
+    let started = false;
+    try {
+      const { contextId, done } = await this.speaker.speak(item.text, item.language, (audio) => {
+        if (this.current !== current) return;
+        if (!started) {
+          started = true;
+          item.onStart?.();
+        }
+        this.send({ event: "media", streamSid: this.streamSid, media: { payload: audio } });
+      }, item.delivery);
+      // A barge-in while the request was on its way: this sentence must not play.
+      if (this.current !== current) return this.speaker.cancel(contextId);
+      current.contextId = contextId;
+      await done;
+    } catch (error) {
+      console.error("[speech] sentence failed", error);
+    }
+    if (this.current !== current) return;
+    this.current = null;
+    this.markCounter += 1;
+    this.marksOutstanding += 1;
+    this.send({ event: "mark", streamSid: this.streamSid, mark: { name: `s${this.markCounter}` } });
+  }
+
+  private notifyIfIdle() {
+    if (this.speaking) return;
+    const waiters = this.idleWaiters;
+    this.idleWaiters = [];
+    for (const resolve of waiters) resolve();
+  }
+
+  private send(message: object) {
+    if (this.twilio.readyState === this.twilio.OPEN) this.twilio.send(JSON.stringify(message));
+  }
+}

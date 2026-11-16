@@ -1,0 +1,26 @@
+# Deploy from the repo root: npm run deploy:voice
+app = "rollcall-voice"
+primary_region = "sjc"
+# A deploy sends SIGINT and the server lets live calls finish (voice/server.ts) for up to this long.
+kill_signal = "SIGINT"
+kill_timeout = 300
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Calls, the dialer and callbacks need the server up all night.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "15s"
+    method = "GET"
+    path = "/health"
+    timeout = "2s"
+
+# The three Moss indexes hold about 720 MB between them; 512 MB was OOM-killed on Oct 24.
+[[vm]]
+  memory = "2gb"
+  cpus = 1
