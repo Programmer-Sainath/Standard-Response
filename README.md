@@ -1,6 +1,6 @@
 # Standard Response
 
-### Live at https://web-production-d0f204de.up.railway.app/map 
+### Live at https://web-production-d0f204de.up.railway.app/dashboard
 ### From urgent requests to coordinated evacuations.
 
 **Standard Response** is an evacuation-coordination platform designed to help emergency teams identify who needs assistance, understand individual transport requirements, and organize available vehicles into an actionable response plan.
