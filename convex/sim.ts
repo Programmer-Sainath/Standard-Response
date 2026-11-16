@@ -1,0 +1,256 @@
+import { v } from "convex/values";
+import { MutationCtx } from "./_generated/server";
+import { internalMutation } from "./functions";
+import { internal } from "./_generated/api";
+import { Doc } from "./_generated/dataModel";
+import { applyRecordPatch, nextToCall } from "./households";
+import { endCall, resolveFollowUpFor, startCall } from "./calls";
+import { STAND_IN_RETRY_AFTER_MS as RETRY_AFTER_MS, STAND_IN_TEXT_REPLY_WAIT_MS as TEXT_REPLY_WAIT_MS } from "./reachLadder";
+import { scriptFor } from "./scripts";
+import { callPriorityFor, located, metersBetween, Point } from "./model";
+import { approveLeftovers, standInCallbacks, standInDispatch } from "./dispatchStandIn";
+import { needModelRunnerLive, needPriorKnown } from "./estimates";
+import { expireStaleChecks, startPickupChecks } from "./pickups";
+import { widenQuietSearches } from "./neighborPickups";
+import { standInPickupChecks } from "./pickupSim";
+import { simNow } from "./clock";
+import { runningMs, simTime } from "../lib/sim-clock";
+
+// Stand-ins. Each block below fakes one teammate's service so the whole pipeline runs
+// before the real piece exists. Flip its switch in `control` once the real one writes.
+
+export const TICK_MS = 900;
+export const MAX_RUN_MS = 45 * 60_000;
+const RING_MS = 1800;
+const MAX_NEW_CALLS_PER_TICK = 2;
+const INBOUND_CHANCE_PER_TICK = 0.15;
+const LINE_CHANCE_PER_TICK = 0.7;
+const MAX_LINES_PER_TICK = 12;
+
+async function personaFor(ctx: MutationCtx, household: Doc<"households">) {
+  return await ctx.db
+    .query("personas")
+    .withIndex("by_householdId", (q) => q.eq("householdId", household._id))
+    .unique();
+}
+
+function fieldConfidence(patch: object) {
+  return Object.fromEntries(Object.keys(patch).map((key) => [key, Math.round((0.78 + Math.random() * 0.21) * 100) / 100]));
+}
+
+async function activeSimulatedCalls(ctx: MutationCtx) {
+  const ringing = await ctx.db.query("calls").withIndex("by_phase", (q) => q.eq("phase", "ringing")).take(100);
+  const live = await ctx.db.query("calls").withIndex("by_phase", (q) => q.eq("phase", "live")).take(100);
+  return [...ringing, ...live];
+}
+
+async function advanceRinging(ctx: MutationCtx, call: Doc<"calls">, persona: Doc<"personas">, now: number) {
+  if (now - call.startedAt < RING_MS) return;
+  const answers = call.direction === "inbound" || Math.random() < persona.answersPhone;
+  if (answers) await ctx.db.patch("calls", call._id, { phase: "live" });
+  else await endCall(ctx, call._id, false);
+}
+
+// How many times something that happens with `chance` per second of the night happens this tick.
+export function happeningsThisTick(chance: number, speed: number, cap: number) {
+  const expected = chance * speed;
+  return Math.min(cap, Math.floor(expected) + (Math.random() < expected % 1 ? 1 : 0));
+}
+
+async function advanceLive(ctx: MutationCtx, call: Doc<"calls">, household: Doc<"households">, persona: Doc<"personas">, now: number, speed: number) {
+  const lines = happeningsThisTick(LINE_CHANCE_PER_TICK, speed, MAX_LINES_PER_TICK);
+  if (lines === 0) return;
+  const spoken = await ctx.db
+    .query("transcriptLines")
+    .withIndex("by_callId", (q) => q.eq("callId", call._id))
+    .take(50);
+  const script = scriptFor(household.address, household.language, persona.truth);
+  for (const step of script.slice(spoken.length, spoken.length + lines)) {
+    await ctx.db.insert("transcriptLines", { callId: call._id, speaker: step.speaker, text: step.text, at: now });
+    await ctx.db.patch("calls", call._id, { stage: step.stage });
+    if (step.patch) await applyRecordPatch(ctx, household._id, step.patch, fieldConfidence(step.patch));
+  }
+  if (spoken.length + lines > script.length) await endCall(ctx, call._id, true);
+}
+
+async function standInVoiceAgent(ctx: MutationCtx, now: number, speed: number) {
+  for (const call of await activeSimulatedCalls(ctx)) {
+    // Simulated Ready calls belong to the Ready check's own stand-in (ready.ts).
+    if (!call.simulated || call.flow) continue;
+    const household = await ctx.db.get("households", call.householdId);
+    const persona = household && (await personaFor(ctx, household));
+    if (!household || !persona) continue;
+    if (call.phase === "ringing") await advanceRinging(ctx, call, persona, now);
+    else await advanceLive(ctx, call, household, persona, now, speed);
+  }
+}
+
+function readyToDial(household: Doc<"households">, now: number) {
+  if (!household.simulated || !household.inZone) return false;
+  if (household.callStatus === "not_called") return true;
+  return now - (household.lastAttemptAt ?? 0) > RETRY_AFTER_MS;
+}
+
+async function standInDialer(ctx: MutationCtx, control: Doc<"control">, now: number, speed: number) {
+  const active = (await activeSimulatedCalls(ctx)).length;
+  let slots = Math.min(control.maxConcurrentCalls - active, MAX_NEW_CALLS_PER_TICK * speed);
+  if (slots <= 0) return;
+
+  if (Math.random() < 1 - (1 - INBOUND_CHANCE_PER_TICK) ** speed) {
+    const waiting = await ctx.db
+      .query("households")
+      .withIndex("by_callStatus_and_callPriority", (q) => q.eq("callStatus", "not_called"))
+      .take(200);
+    const caller = waiting[Math.floor(Math.random() * waiting.length)];
+    if (caller?.simulated && caller.inZone) {
+      await startCall(ctx, { householdId: caller._id, direction: "inbound", simulated: true });
+      slots -= 1;
+    }
+  }
+
+  const candidates = (await nextToCall(ctx, 40)).filter((h) => readyToDial(h, now)).slice(0, slots);
+  for (const household of candidates) {
+    await startCall(ctx, { householdId: household._id, direction: "outbound", simulated: true });
+  }
+}
+
+const TEXT_PROMPT = "Altadena evacuation line: reply 1 if you can leave on your own, 2 if you need a ride, 3 if you need a wheelchair-accessible vehicle.";
+
+async function ensureTextSent(ctx: MutationCtx, household: Doc<"households">) {
+  const sent = await ctx.db.query("texts").withIndex("by_householdId", (q) => q.eq("householdId", household._id)).first();
+  if (!sent) await ctx.db.insert("texts", { householdId: household._id, direction: "outbound", body: TEXT_PROMPT, at: await simNow(ctx) });
+}
+
+const replyDigit = (truth: Doc<"personas">["truth"]) =>
+  truth.mobility !== "walks" ? "3" : truth.canLeave === "yes" && truth.hasCar ? "1" : "2";
+
+async function standInTextFollowUp(ctx: MutationCtx, now: number) {
+  const texted = await ctx.db.query("households").withIndex("by_callStatus_and_callPriority", (q) => q.eq("callStatus", "texted")).take(50);
+  for (const household of texted) {
+    if (!household.simulated) continue;
+    await ensureTextSent(ctx, household);
+    if (now - (household.lastAttemptAt ?? now) < TEXT_REPLY_WAIT_MS) continue;
+    const persona = await personaFor(ctx, household);
+    if (!persona) continue;
+    if (persona.repliesToText) {
+      await ctx.db.insert("texts", { householdId: household._id, direction: "inbound", body: replyDigit(persona.truth), at: now });
+      const { truth } = persona;
+      const patch = { canLeave: truth.canLeave, mobility: truth.mobility, medical: truth.medical, hasCar: truth.hasCar };
+      await applyRecordPatch(ctx, household._id, patch, fieldConfidence(patch));
+    }
+    await resolveFollowUpFor(ctx, household._id, persona.repliesToText ? "replied" : "door_check");
+  }
+}
+
+// Stand-in need model: census prior, shrunk toward what nearby answered calls revealed.
+const NEIGHBOR_RADIUS_METERS = 350;
+const PRIOR_STRENGTH = 3;
+const RAISE_EVENT_THRESHOLD = 0.5;
+const MAX_MODEL_EVENTS_PER_TICK = 2;
+
+const NEEDS_HELP = new Set(["needs_ride", "needs_accessible"]);
+
+function posteriorFor(household: Doc<"households"> & Point, reached: (Doc<"households"> & Point)[]) {
+  let neighbors = 0;
+  let needing = 0;
+  for (const other of reached) {
+    if (metersBetween(household, other) > NEIGHBOR_RADIUS_METERS) continue;
+    neighbors += 1;
+    if (NEEDS_HELP.has(other.outcome)) needing += 1;
+  }
+  return (household.needPrior * PRIOR_STRENGTH + needing) / (PRIOR_STRENGTH + neighbors);
+}
+
+async function standInNeedModel(ctx: MutationCtx, now: number) {
+  const households = (await ctx.db.query("households").take(1000)).filter(located);
+  const reached = households.filter((h) => h.outcome !== "unknown" && h.outcome !== "unreachable");
+  let events = 0;
+  for (const household of households) {
+    if (household.outcome !== "unknown" || needPriorKnown(household)) continue;
+    const needProbability = posteriorFor(household, reached);
+    if (Math.abs(needProbability - household.needProbability) < 0.02) continue;
+    await ctx.db.patch("households", household._id, {
+      needProbability,
+      callPriority: callPriorityFor(needProbability, household.fireArrivalAt, now),
+    });
+    const crossedUp = household.needProbability < RAISE_EVENT_THRESHOLD && needProbability >= RAISE_EVENT_THRESHOLD;
+    if (crossedUp && events < MAX_MODEL_EVENTS_PER_TICK) {
+      events += 1;
+      await ctx.db.insert("events", {
+        kind: "model",
+        message: `${household.address} moved up the call list: neighbors need help (${household.needProbability.toFixed(2)} to ${needProbability.toFixed(2)})`,
+        householdId: household._id,
+        at: now,
+      });
+    }
+  }
+}
+
+// The loop runs ~2 functions a second; left on overnight it exhausts the Convex plan.
+async function stopLoop(ctx: MutationCtx, control: Doc<"control">, now: number) {
+  await ctx.db.patch("control", control._id, { dialerRunning: false });
+  const minutes = Math.round(MAX_RUN_MS / 60_000);
+  await ctx.db.insert("events", {
+    kind: "control",
+    message: `Simulation stopped after ${minutes} minutes to save Convex usage. Reset to run again`,
+    at: now,
+  });
+  return null;
+}
+
+// The heartbeat only checks that the night is still running and schedules the work. A step that
+// throws is lost on its own and the next heartbeat still comes, so one bad step can't end the night.
+export const tick = internalMutation({
+  args: { generation: v.number() },
+  returns: v.null(),
+  handler: async (ctx, { generation }) => {
+    const control = await runningControl(ctx, generation);
+    if (!control) return null;
+    const real = Date.now();
+    const ran = control.clock ? runningMs(control.clock, real) : real - (control.warningIssuedAt ?? real);
+    if (ran > MAX_RUN_MS) return await stopLoop(ctx, control, simTime(control.clock, real));
+    await ctx.scheduler.runAfter(0, internal.sim.step, { generation });
+    await ctx.scheduler.runAfter(TICK_MS, internal.sim.tick, { generation });
+    return null;
+  },
+});
+
+export const step = internalMutation({
+  args: { generation: v.number() },
+  returns: v.null(),
+  handler: async (ctx, { generation }) => {
+    const control = await runningControl(ctx, generation);
+    if (!control) return null;
+    const speed = control.clock?.speed ?? 1;
+    const now = simTime(control.clock, Date.now());
+    await runStandIns(ctx, control, now, speed);
+    const stepMs = TICK_MS * speed;
+    if (control.simulateDispatch) await standInDispatch(ctx, control, now, stepMs);
+    else await ctx.scheduler.runAfter(0, internal.fleet.tick, { tickMs: stepMs });
+    return null;
+  },
+});
+
+// The control row while this loop is the current one, the warning is out and the clock isn't paused.
+async function runningControl(ctx: MutationCtx, generation: number) {
+  const control = await ctx.db.query("control").first();
+  if (!control || control.tickGeneration !== generation || !control.warningIssuedAt) return null;
+  return (control.clock?.speed ?? 1) === 0 ? null : control;
+}
+
+// `speed` is how many seconds of the night pass in this tick's second. Work that happens at a rate
+// per tick is scaled by it, up to a cap that keeps one tick's writes small at any speed.
+async function runStandIns(ctx: MutationCtx, control: Doc<"control">, now: number, speed: number) {
+  await startPickupChecks(ctx, now);
+  await expireStaleChecks(ctx, now);
+  await widenQuietSearches(ctx, now);
+  if (control.simulateVoice) {
+    await standInPickupChecks(ctx, now, speed);
+    await standInVoiceAgent(ctx, now, speed);
+    if (control.dialerRunning) await standInDialer(ctx, control, now, speed);
+    await standInTextFollowUp(ctx, now);
+    await standInCallbacks(ctx, now);
+  }
+  if (control.simulateNeedModel || !(await needModelRunnerLive(ctx))) await standInNeedModel(ctx, now);
+  if (control.autoApprove) await approveLeftovers(ctx);
+}

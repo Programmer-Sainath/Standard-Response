@@ -1,0 +1,222 @@
+import { MutationCtx, QueryCtx } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
+import { located, metersBetween } from "./model";
+import { simNow } from "./clock";
+import { callDriversNear, callRidersNear } from "./neighborCalls";
+import { awayFromTheFire, busyHelpers, canDrive, fitsInACar, Household, Located, REACH_METERS, reachOf, waitingForANeighbor } from "./neighborRules";
+import { isSmallDemoPair, pairSmallDemo } from "./demoNeighbors";
+
+// When tonight's call hears that someone can't get out and nobody agreed ahead of time to come for
+// them, 911 calls the nearest neighbor with a car straight away and asks them to pick the person up,
+// first within 900 m and then in wider circles.
+// The ride request stays open the whole time: crews are likely swamped, so a neighbor is a faster
+// first try, never a reason to hold a van. Each "no" or missed call moves on to the next neighbor.
+
+const WIDEN_AFTER_MS = 3 * 60_000;
+const MAX_NEIGHBORS_ASKED = 6;
+const LIVE: Doc<"pickupPlans">["status"][] = ["arranged", "checking", "coming"];
+
+const DRIVER_OUTCOMES = ["leaving", "unknown"] as const;
+const WAITING_OUTCOMES = ["needs_ride", "needs_accessible"] as const;
+
+function canAsk(household: Household, resident: Located, skip: Set<string>): household is Located {
+  if (household._id === resident._id || skip.has(household._id)) return false;
+  return canDrive(household) && located(household);
+}
+
+type Choice = { household: Household; meters: number; lastHope: boolean };
+
+function closer(best: Choice | null, household: Household, meters: number, lastHope: boolean): Choice {
+  if (!best || meters < best.meters) return { household, meters, lastHope };
+  return best;
+}
+
+// The nearest driver the fire reaches no later than the resident. With none in reach, the nearest
+// driver anyway: a last chance is still a call, even when the drive points toward the fire.
+async function nearestDriver(ctx: MutationCtx, resident: Located, skip: Set<string>, reachMeters: number): Promise<Choice | null> {
+  const lists = await Promise.all(
+    DRIVER_OUTCOMES.map((outcome) => ctx.db.query("households").withIndex("by_outcome", (q) => q.eq("outcome", outcome)).take(1000)),
+  );
+  let safe: Choice | null = null;
+  let lastHope: Choice | null = null;
+  for (const household of lists.flat()) {
+    if (!canAsk(household, resident, skip)) continue;
+    const meters = metersBetween(resident, household);
+    if (meters > reachMeters) continue;
+    lastHope = closer(lastHope, household, meters, true);
+    if (awayFromTheFire(household, resident)) safe = closer(safe, household, meters, false);
+  }
+  return safe ?? lastHope;
+}
+
+const streetOf = (address: string) => address.replace(/^\s*\d+[A-Za-z]?\s+/, "");
+
+const kilometers = (meters: number) => (meters < 1000 ? `${meters} m` : `${meters / 1000} km`);
+
+// Nobody left in this circle to ask. The clock on widening starts the first time we find that.
+async function goQuiet(ctx: MutationCtx, resident: Located, reachMeters: number, now: number) {
+  if (resident.neighborSearch?.idleSince !== undefined && resident.neighborSearch.reachMeters === reachMeters) return;
+  await ctx.db.patch("households", resident._id, { neighborSearch: { reachMeters, idleSince: now } });
+}
+
+const nextReach = (reachMeters: number) => REACH_METERS.find((meters) => meters > reachMeters);
+
+// Night tick: a home whose circle has been quiet for three minutes gets a wider one, and the
+// nearest neighbor in it is called straight away.
+export async function widenQuietSearches(ctx: MutationCtx, now: number) {
+  for (const outcome of WAITING_OUTCOMES) {
+    const waiting = await ctx.db.query("households").withIndex("by_outcome", (q) => q.eq("outcome", outcome)).take(300);
+    for (const household of waiting) await widenIfQuiet(ctx, household, now);
+  }
+}
+
+async function widenIfQuiet(ctx: MutationCtx, household: Household, now: number) {
+  const search = household.neighborSearch;
+  if (search?.idleSince === undefined || now - search.idleSince < WIDEN_AFTER_MS) return;
+  const reachMeters = nextReach(search.reachMeters);
+  if (reachMeters === undefined) return;
+  await ctx.db.patch("households", household._id, { neighborSearch: { reachMeters } });
+  await ctx.db.insert("events", {
+    kind: "dispatch",
+    message: `No neighbor within ${kilometers(search.reachMeters)} of ${household.residentName ?? household.address} is on the way. Looking out to ${kilometers(reachMeters)}`,
+    householdId: household._id,
+    at: now,
+  });
+  await askNearbyDriver(ctx, household._id);
+}
+
+// Nobody is already being asked or on the way, the resident hasn't turned down a neighbor's ride,
+// and we haven't run through our neighbors yet.
+const mayAskAnother = (plans: Doc<"pickupPlans">[]) =>
+  !plans.some((plan) => LIVE.includes(plan.status) || plan.reason === "resident_declined") &&
+  plans.filter((plan) => plan.recruited).length < MAX_NEIGHBORS_ASKED;
+
+const plansFor = (ctx: QueryCtx, householdId: Id<"households">) =>
+  ctx.db.query("pickupPlans").withIndex("by_householdId", (q) => q.eq("householdId", householdId)).take(20);
+
+function askMessage(resident: Located, neighbor: Household, lastHope: boolean) {
+  const who = resident.residentName ?? resident.address;
+  const street = streetOf(neighbor.address);
+  if (!lastHope) return `Asking a neighbor on ${street} to pick up ${who}`;
+  const name = neighbor.residentName ?? `the neighbor on ${street}`;
+  return `Nobody the fire reaches sooner can pick up ${who}. Asking ${name} anyway`;
+}
+
+async function askToPickUp(ctx: MutationCtx, resident: Located, neighbor: Household, reachMeters: number, now: number, lastHope: boolean) {
+  await ctx.db.patch("households", resident._id, { neighborSearch: { reachMeters } });
+  await ctx.db.insert("pickupPlans", {
+    householdId: resident._id,
+    helperName: neighbor.residentName ?? `the neighbor at ${neighbor.address}`,
+    helperPhone: neighbor.callbackNumber,
+    relation: "neighbor",
+    helperHouseholdId: neighbor._id,
+    recruited: true,
+    status: "checking",
+    helperAttempts: 0,
+    residentAttempts: 0,
+    checkStartedAt: now,
+    updatedAt: now,
+    simulated: resident.simulated || neighbor.simulated,
+  });
+  await ctx.db.insert("events", {
+    kind: "dispatch",
+    message: askMessage(resident, neighbor, lastHope),
+    householdId: resident._id,
+    at: now,
+  });
+}
+
+// The neighbor the Ready check paired with this home (readyPairing.ts) is asked at the warning, or
+// now if the resident's own call came first. One who can no longer drive, is busy with someone
+// else, or would have to drive toward the fire is let go; once the resident's call says they can't
+// get out, the nearest other neighbor is asked instead.
+async function startPairedAsk(ctx: MutationCtx, resident: Located, plans: Doc<"pickupPlans">[]) {
+  const paired = plans.find((plan) => plan.status === "arranged" && plan.recruited);
+  if (!paired) return "none";
+  const helper = paired.helperHouseholdId ? await ctx.db.get("households", paired.helperHouseholdId) : null;
+  const now = await simNow(ctx);
+  const free = helper !== null && !(await busyHelpers(ctx)).has(helper._id);
+  const directionAllowed = helper && (awayFromTheFire(helper, resident) || await isSmallDemoPair(ctx, paired));
+  if (helper && free && canDrive(helper) && directionAllowed) {
+    await ctx.db.patch("pickupPlans", paired._id, { status: "checking", checkStartedAt: now, updatedAt: now });
+    await ctx.db.patch("households", resident._id, { neighborSearch: { reachMeters: reachOf(resident) } });
+    await ctx.db.insert("events", {
+      kind: "dispatch",
+      message: `Asking ${paired.helperName}, the neighbor paired at the Ready check, to pick up ${resident.residentName ?? resident.address}`,
+      householdId: resident._id,
+      at: now,
+    });
+    return "started";
+  }
+  await ctx.db.delete("pickupPlans", paired._id);
+  await ctx.db.insert("events", {
+    kind: "dispatch",
+    message: `${paired.helperName} can't be asked to pick up ${resident.residentName ?? resident.address} tonight. Asking the nearest other neighbor`,
+    householdId: resident._id,
+    at: now,
+  });
+  return "released";
+}
+
+// The warning: start the Ready check's pairing for this home, if it has one and the home fits in a car.
+export async function startPairedAskFor(ctx: MutationCtx, resident: Household) {
+  if (!located(resident)) return;
+  const plans = await plansFor(ctx, resident._id);
+  const paired = plans.find((plan) => plan.status === "arranged" && plan.recruited);
+  if (!fitsInACar(resident) && !(paired && await isSmallDemoPair(ctx, paired))) return;
+  await startPairedAsk(ctx, resident, plans);
+}
+
+export async function askNearbyDriver(ctx: MutationCtx, householdId: Id<"households">) {
+  const resident = await ctx.db.get("households", householdId);
+  if (resident && !resident.simulated) await pairSmallDemo(ctx);
+  if (!waitingForANeighbor(resident)) return;
+  let plans = await plansFor(ctx, householdId);
+  const paired = await startPairedAsk(ctx, resident, plans);
+  if (paired === "started") return;
+  if (paired === "released") plans = await plansFor(ctx, householdId);
+  if (!mayAskAnother(plans)) return;
+  const skip = await busyHelpers(ctx);
+  for (const plan of plans) if (plan.helperHouseholdId) skip.add(plan.helperHouseholdId);
+  const now = await simNow(ctx);
+  const reachMeters = reachOf(resident);
+  const neighbor = await nearestDriver(ctx, resident, skip, reachMeters);
+  if (neighbor) return await askToPickUp(ctx, resident, neighbor.household, reachMeters, now, neighbor.lastHope);
+  await goQuiet(ctx, resident, reachMeters, now);
+  await callDriversNear(ctx, resident, reachMeters, now);
+}
+
+// Homes still waiting for a neighbor that this driver is close enough to ask, nearest first.
+async function waitingNear(ctx: QueryCtx, driver: Located) {
+  const lists = await Promise.all(
+    WAITING_OUTCOMES.map((outcome) => ctx.db.query("households").withIndex("by_outcome", (q) => q.eq("outcome", outcome)).take(300)),
+  );
+  return lists
+    .flat()
+    .filter(waitingForANeighbor)
+    .map((resident) => ({ resident, meters: metersBetween(resident, driver) }))
+    .filter(({ resident, meters }) => meters <= reachOf(resident) && canAsk(driver, resident, new Set()))
+    .sort((a, b) => a.meters - b.meters)
+    .map(({ resident }) => resident);
+}
+
+// A home that can't get out is asked about the moment its own call hears it, but a neighbor whose
+// call hasn't yet said they have a car isn't a driver then. So when a call turns someone into a
+// driver, the nearest home still waiting for one asks them straight away, instead of only finding
+// them three minutes later when its circle widens. With nobody waiting nearby yet, the homes around
+// them likeliest to need a ride are called next.
+export async function askNewDriver(ctx: MutationCtx, before: Household) {
+  const driver = await ctx.db.get("households", before._id);
+  if (canDrive(before) || !driver || !canDrive(driver) || !located(driver)) return;
+  await pairSmallDemo(ctx);
+  if ((await busyHelpers(ctx)).has(driver._id)) return;
+  const now = await simNow(ctx);
+  for (const resident of await waitingNear(ctx, driver)) {
+    const plans = await plansFor(ctx, resident._id);
+    if (!mayAskAnother(plans) || plans.some((plan) => plan.helperHouseholdId === driver._id)) continue;
+    const chosen = await nearestDriver(ctx, resident, new Set(), reachOf(resident));
+    if (chosen?.household._id !== driver._id) continue;
+    return await askToPickUp(ctx, resident, driver, reachOf(resident), now, chosen.lastHope);
+  }
+  await callRidersNear(ctx, driver, now);
+}
