@@ -1,0 +1,272 @@
+@import "tailwindcss";
+
+/* The deck's own faces: Nexa Rust (a Fontfabric trial) sets the name Standard Response,
+   numbers and big display text, and Mustica Pro (Alifinart Studio, free version, one weight) sets the
+   deck's body text. The files are in public/brand-fonts/ (credits in its README). Without them the name
+   falls back to Verlag, then League Spartan, the big type to Sofia Sans Condensed and the deck's body to
+   Public Sans. Each weight range stops the browser from synthesizing a bolder copy of the one face. */
+@font-face {
+  font-family: "Mustica Pro";
+  src: url("/brand-fonts/MusticaPro-SemiBold.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Verlag";
+  src: url("/brand-fonts/Verlag-Black.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Nexa Rust Sans";
+  src: url("/brand-fonts/NexaRustSans-Trial-Black2.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+  /* The trial draws a "TRIAL FONT" stamp for every other character (%, +, /, #, −, ×, brackets), so
+     those fall through to the next face in the stack. */
+  unicode-range: U+0020-0021, U+002C-002E, U+0030-003B, U+003F, U+0041-005A, U+0061-007A, U+00A0, U+00AB,
+    U+00BB, U+2013-2014, U+2018-2019, U+201C-201D, U+2026, U+2039-203A;
+}
+
+/* Light mode only: the map is paper, and every surface around it is paper too.
+   Red means fire or a person who can't leave without help. Nothing else is red. */
+:root {
+  --canvas: oklch(0.975 0.006 85);
+  --surface: oklch(0.995 0.002 85);
+  --surface-sunk: oklch(0.955 0.006 85);
+  --line: oklch(0.9 0.006 85);
+  --line-strong: oklch(0.8 0.008 85);
+  --ink: oklch(0.235 0.012 60);
+  --ink-muted: oklch(0.47 0.012 60);
+  /* Floating cards over the map. Kept as their own tokens so the map chrome can change in one place. */
+  --panel: oklch(0.995 0.002 85);
+  --panel-raised: oklch(0.955 0.006 85);
+  --on-panel: oklch(0.235 0.012 60);
+  --on-panel-muted: oklch(0.47 0.012 60);
+  --signal: oklch(0.585 0.215 27);
+  --signal-soft: oklch(0.94 0.04 27);
+  --ember: oklch(0.72 0.18 50);
+  --leaving: oklch(0.58 0.13 155);
+  --ride: oklch(0.7 0.16 58);
+  --accessible: var(--signal);
+  --unreachable: oklch(0.55 0.012 60);
+  --unknown: oklch(0.8 0.008 60);
+  --map-paper: oklch(0.963 0.012 85);
+  --map-ink: oklch(0.235 0.012 60);
+  /* Woodblock Prussian blue: water on the map (flood, surge, tsunami), and nothing else. INK_PALETTE.indigo in lib/ink-map/renderer.ts. */
+  --map-indigo: oklch(0.38 0.085 255);
+  --smoke: oklch(0.9 0.008 70);
+  --shadow-float: 0 1px 2px oklch(0.3 0.02 60 / 0.08), 0 6px 20px oklch(0.3 0.02 60 / 0.1);
+  --shadow-popover: 0 0 0 1px var(--panel-raised), 0 16px 40px oklch(0 0 0 / 0.35);
+  /* A phone-sized page standing on the map paper, and the handset drawn around the simulated phone. */
+  --shadow-device: 0 0 0 1px oklch(0 0 0 / 0.08), 0 24px 60px oklch(0 0 0 / 0.18);
+  --shadow-handset: 0 30px 80px oklch(0 0 0 / 0.28);
+  --shadow-knob: 0 1px 2px oklch(0.3 0.02 60 / 0.3);
+  --shadow-inset-line: inset 0 0 0 1px oklch(0 0 0 / 0.06);
+  /* The pitch deck's night: the map with its paper and ink swapped, and the stage around it. */
+  --night: oklch(0.17 0.008 60);
+  --night-raised: oklch(0.24 0.008 60);
+  --on-night: oklch(0.95 0.006 85);
+  --on-night-muted: oklch(0.72 0.01 70);
+  /* The name Standard Response, and numbers and big display text. See the @font-face rules above. */
+  --brand-face: "Nexa Rust Sans", "Verlag", var(--font-league-spartan), sans-serif;
+  --deck-body-face: "Mustica Pro", var(--font-public-sans), sans-serif;
+  --big-face: "Nexa Rust Sans", var(--font-sofia-condensed), var(--font-public-sans), sans-serif;
+}
+
+/* The judge's claim surfaces (the kiosk at /, /join and /you) set their big type in Sofia Sans Condensed.
+   Their headlines are sentence case with apostrophes, which the caps-only Nexa trial cannot draw. */
+.claim-face {
+  --big-face: var(--font-sofia-condensed), var(--font-public-sans), sans-serif;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunk: var(--surface-sunk);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-panel: var(--panel);
+  --color-panel-raised: var(--panel-raised);
+  --color-on-panel: var(--on-panel);
+  --color-on-panel-muted: var(--on-panel-muted);
+  --color-signal: var(--signal);
+  --color-signal-soft: var(--signal-soft);
+  --color-ember: var(--ember);
+  --color-leaving: var(--leaving);
+  --color-ride: var(--ride);
+  --color-accessible: var(--accessible);
+  --color-unreachable: var(--unreachable);
+  --color-unknown: var(--unknown);
+  --color-map-paper: var(--map-paper);
+  --color-map-ink: var(--map-ink);
+  --color-map-indigo: var(--map-indigo);
+  --color-night: var(--night);
+  --color-night-raised: var(--night-raised);
+  --color-on-night: var(--on-night);
+  --color-on-night-muted: var(--on-night-muted);
+  --font-sans: var(--font-fira-sans);
+  --font-display: var(--font-sofia-condensed);
+  --font-brand: var(--brand-face);
+  --font-big: var(--big-face);
+  --font-deck: var(--deck-body-face);
+  --shadow-float: var(--shadow-float);
+  --shadow-popover: var(--shadow-popover);
+  --shadow-device: var(--shadow-device);
+  --shadow-handset: var(--shadow-handset);
+  --shadow-knob: var(--shadow-knob);
+  --shadow-inset-line: var(--shadow-inset-line);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Type scale: Fira Sans for reading, Sofia Sans Condensed for anything read from across the room. */
+@layer components {
+  .type-display {
+    font-family: var(--big-face);
+    font-size: clamp(2.25rem, 4vw, 3.75rem);
+    line-height: 1;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+  .type-title {
+    font-family: var(--font-sofia-condensed), var(--font-public-sans), sans-serif;
+    font-size: 1.375rem;
+    line-height: 1.15;
+    font-weight: 800;
+  }
+  .type-heading {
+    font-size: 1rem;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+  .type-body {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    font-weight: 400;
+    text-wrap: pretty;
+  }
+  .type-small {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+  .type-caption {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    font-weight: 400;
+  }
+  /* The one card surface: Panel, tiles, disclosures and floating cards all sit on it. */
+  .card {
+    border-radius: var(--radius-2xl);
+    background: var(--panel);
+    color: var(--on-panel);
+    box-shadow: var(--shadow-float);
+  }
+  /* Hatching marks something that no longer holds: a replaced offer, a locked control. */
+  .hatch {
+    background-image: repeating-linear-gradient(135deg, currentColor 0 1.5px, transparent 1.5px 7px);
+  }
+  /* The pitch deck draws on a fixed 1920 by 1080 stage, so its sizes are pixels read from across a room. */
+  .type-deck-figure {
+    font-family: var(--big-face);
+    font-size: 300px;
+    line-height: 0.85;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .type-deck-display {
+    font-family: var(--big-face);
+    font-size: 200px;
+    line-height: 0.9;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+  .type-deck-title {
+    font-family: var(--big-face);
+    font-size: 104px;
+    line-height: 1;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+  .type-deck-quote {
+    font-family: var(--font-sofia-condensed), var(--font-public-sans), sans-serif;
+    font-size: 68px;
+    line-height: 1.08;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+  .type-deck-lede {
+    font-size: 44px;
+    line-height: 1.3;
+    font-weight: 400;
+    text-wrap: pretty;
+  }
+  .type-deck-label {
+    font-size: 30px;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+  .type-deck-note {
+    font-size: 22px;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+  .type-figure {
+    font-family: var(--big-face);
+    font-weight: 800;
+    line-height: 1;
+  }
+}
+
+/* Live-call motion. Every animation is off for reduced motion; state stays readable from color and labels. */
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes ring-out {
+  0% { transform: scale(1); opacity: 0.75; }
+  100% { transform: scale(3.4); opacity: 0; }
+}
+
+@keyframes ringing {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-14deg); }
+  30% { transform: rotate(14deg); }
+  45% { transform: rotate(-8deg); }
+  60% { transform: rotate(8deg); }
+  75% { transform: rotate(0deg); }
+}
+
+@keyframes sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes remote-pulse {
+  0% { transform: scale(0.4); opacity: 0.7; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-wave { animation: wave var(--wave-duration, 900ms) var(--ease-standard) infinite; animation-delay: var(--wave-delay, 0ms); }
+  .animate-ring-out { animation: ring-out 1.8s var(--ease-out-quint) infinite; transform-box: fill-box; transform-origin: center; }
+  .animate-ringing { animation: ringing 1.2s ease-in-out infinite; }
+  .animate-sweep { animation: sweep 1.6s var(--ease-standard) infinite; }
+  .animate-dash-flow { animation: dash-flow 1.4s linear infinite; }
+  .animate-remote-pulse { animation: remote-pulse 450ms var(--ease-out-quint) forwards; }
+}
