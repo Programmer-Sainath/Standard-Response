@@ -1,0 +1,180 @@
+"""The voice agent's fixed lines, read from voice/agent/lines/<language>.ts.
+
+The eval and the grader compare agent replies against these sentences (status templates, the safety line,
+"nothing has changed", the hold steps). Reading them from the voice agent's source keeps the comparison true when
+the wording changes, instead of drifting from a copy. Only plain string values are read: a key whose
+value is a function (`confirmAddress: (address) => ...`) is skipped.
+"""
+
+import json
+import re
+import subprocess
+import uuid
+from functools import cache
+
+from .paths import REPO
+
+LINES_DIR = REPO / "voice" / "agent" / "lines"
+CONVERSATION = REPO / "voice" / "agent" / "conversation.ts"
+HAZARD = "wildfire"  # the hazard the persona and alignment evals run under
+
+_STRING = r'"(?:[^"\\]|\\.)*"'
+_KEY = re.compile(r"^(\s*)(\w+):\s*(.*)$")
+
+
+def _string(literal: str) -> str:
+    return json.loads(literal)
+
+
+def _block_end(lines: list[str], start: int, indent: int) -> int:
+    """Index of the line that closes the object or array opened on line `start`."""
+    for i in range(start + 1, len(lines)):
+        stripped = lines[i].strip()
+        if stripped and len(lines[i]) - len(lines[i].lstrip()) <= indent and stripped[0] in "}]":
+            return i
+    return len(lines)
+
+
+def _parse_block(lines: list[str], indent: int) -> dict:
+    """Keys at exactly `indent` spaces, with string, string-array or nested-object values."""
+    values: dict = {}
+    i = 0
+    while i < len(lines):
+        m = _KEY.match(lines[i])
+        if not m or len(m.group(1)) != indent:
+            i += 1
+            continue
+        key, rest = m.group(2), m.group(3).strip()
+        if rest in ("{", "["):
+            end = _block_end(lines, i, indent)
+            body = lines[i + 1:end]
+            values[key] = _parse_block(body, indent + 2) if rest == "{" else [_string(s) for s in re.findall(_STRING, "\n".join(body))]
+            i = end + 1
+            continue
+        if not rest and i + 1 < len(lines):  # the value sits on the next line
+            rest = lines[i + 1].strip()
+            i += 1
+        literal = re.fullmatch(rf"({_STRING}),?", rest)
+        if literal:
+            values[key] = _string(literal.group(1))
+        i += 1
+    return values
+
+
+def _parse_source(text: str) -> dict:
+    source = text.splitlines()
+    start = next((i for i, line in enumerate(source) if re.match(r"export const \w+: Lines = \{", line)), None)
+    if start is None:
+        return {}
+    return _parse_block(source[start + 1:], 2)
+
+
+@cache
+def lines_for(language: str) -> dict:
+    """Every plain-string line in voice/agent/lines/<language>.ts, by key. Empty if the file is missing."""
+    path = LINES_DIR / f"{language}.ts"
+    return _parse_source(path.read_text()) if path.exists() else {}
+
+
+def _with_safety(line: str, lines: dict) -> str:
+    safety = lines.get("safety", {}).get(HAZARD)
+    return f"{line}{lines.get('sentenceGap', ' ')}{safety}" if safety else line
+
+
+def with_safety(line: str, language: str) -> str:
+    """As voice/agent/script.ts withSafety: the line, then the hazard's safety sentence."""
+    return _with_safety(line, lines_for(language))
+
+
+def _git(*args: str) -> str | None:
+    try:
+        return subprocess.run(["git", "-C", str(REPO), *args], capture_output=True, text=True, check=True, timeout=30).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+@cache
+def line_versions(language: str) -> tuple[dict, ...]:
+    """The lines file as it is now, then as every commit left it, newest first. A transcript outlives the wording it
+    was spoken in, so the checks accept any committed wording, not only today's. Just the current file without git."""
+    path = f"voice/agent/lines/{language}.ts"
+    versions = [lines_for(language)]
+    for rev in (_git("log", "--format=%H", "--", path) or "").split():
+        text = _git("show", f"{rev}:{path}")
+        if text and (parsed := _parse_source(text)):
+            versions.append(parsed)
+    return tuple(v for v in versions if v)
+
+
+@cache
+def wordings(language: str) -> dict[str, frozenset[str]]:
+    """Every committed wording of the status lines, as statusLine says them, and the lines said around them."""
+    out: dict[str, set[str]] = {key: set() for key in ("waiting", "reassigning", "leaveNow", "safety", "statusUnchanged", "holdSteps")}
+    for lines in line_versions(language):
+        for key in ("waiting", "reassigning"):
+            if key in lines:
+                out[key].add(_with_safety(lines[key], lines))
+        for key in ("leaveNow", "statusUnchanged"):
+            if key in lines:
+                out[key].add(lines[key])
+        if HAZARD in lines.get("safety", {}):
+            out["safety"].add(lines["safety"][HAZARD])
+        out["holdSteps"].update(lines.get("holdSteps", []))
+    return {key: frozenset(values) for key, values in out.items()}
+
+
+def _strings(value) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    items = value.values() if isinstance(value, dict) else value
+    return [s for item in items for s in _strings(item)]
+
+
+# Shorter fixed lines ("Okay.", "Mm-hm.") also occur inside Claude's own sentences, so they aren't removed from them.
+FIXED_LINE_MIN_CHARS = 12
+
+
+@cache
+def fixed_lines(language: str) -> tuple[str, ...]:
+    """Every plain-string line the code has said in this language in any committed wording, longest first. Code chose
+    every word of these, so none of them is Claude's free text."""
+    lines = {s for version in line_versions(language) for s in _strings(version) if len(s) >= FIXED_LINE_MIN_CHARS}
+    return tuple(sorted(lines, key=len, reverse=True))
+
+
+def _conversation_constant(name: str, default: int) -> int:
+    found = CONVERSATION.exists() and re.search(rf"const {name} = (\d+);", CONVERSATION.read_text())
+    return int(found.group(1)) if found else default
+
+
+def recent_agent_turns() -> int:
+    """How many agent turns back a status line still counts as just heard (conversation.ts RECENT_AGENT_TURNS)."""
+    return _conversation_constant("RECENT_AGENT_TURNS", 3)
+
+
+def first_sentences(text: str, count: int) -> str:
+    """As conversation.ts firstSentences."""
+    return " ".join([s for s in re.split(r"(?<=[.!?。！？])\s*", text) if s][:count])
+
+
+def ride_answer(status_line: str) -> str:
+    """A question about the ride asked right after the full status gets its first sentences (conversation.ts rideAnswer)."""
+    return first_sentences(status_line, _conversation_constant("RIDE_ANSWER_SENTENCES", 2))
+
+
+# POST /turn speaks for the hazard picked on the shared call floor (voice/hazard.ts), not one the eval chooses. The cards
+# and the status lines the evals expect are for HAZARD, so a call that spoke another hazard's safety line isn't scored.
+
+
+def hazards_spoken(texts: list[str], language: str) -> set[str]:
+    safety = lines_for(language).get("safety", {})
+    return {hazard for hazard, line in safety.items() if any(line in text for text in texts)}
+
+
+def probe_hazard(agent) -> str | None:
+    """The hazard the agent speaks for right now: one call with a ride on the list, asked about the ride."""
+    body = {"sessionId": f"hazard-probe-{uuid.uuid4().hex[:8]}", "language": "en", "text": "", "requestStatus": "received"}
+    agent.turn(body)
+    reply = agent.turn({**body, "text": "Is someone coming to get me?"})["reply"]
+    spoken = hazards_spoken([reply], "en")
+    return min(spoken) if len(spoken) == 1 else None
