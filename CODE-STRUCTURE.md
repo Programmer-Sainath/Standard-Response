@@ -24,7 +24,6 @@ Open `START-HERE.md` first. Keep the existing folder names: source imports and D
 | `.env.voice.example` | Separate optional voice-service variable template |
 | `README.md` | Original project README and credits |
 | `RAILWAY-SETUP.md` | Previous chat's Railway deployment and recovery notes |
-| `AGENTS.md`, `PLAN.md`, `HANDOFF.md` | Preserved upstream development and handoff documentation |
 
 ## Important entry points
 
