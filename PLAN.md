@@ -37,10 +37,9 @@ These are also in `AGENTS.md`, which every coding agent reads.
 
 1. **Commit only to `main`.** Pull with rebase before starting a task and before every commit. Push right after each commit. Never force-push or rewrite history.
 2. **Watch `main` for pushes.** Fetch `origin` at least every 5 minutes while working. When new commits land, pull them, read any changed notes addressed to you, and re-run `npm run typecheck`.
-3. **Talk through notes files.** `notes/boris-to-brendan.md` holds notes from Boris to Brendan, and so on for every pair; `notes/boris-to-everyone.md` is for the whole team. Only the sender writes their file. Add each note at the bottom under a timestamp heading. Reply in your own file to that person.
-4. **Tell readers before changing the contract** (see [Contract](#contract)). Write a note to everyone who reads the table before pushing the change, and keep old fields working until nothing reads them.
-5. **Secrets never go in git.** The shared env file (`CONVEX_URL`, `ANTHROPIC_API_KEY` and the rest) is pinned in the team chat. Save it locally as `.env.local`, which git ignores.
-6. **Stand-ins stay working.** Never break a stand-in someone is building against. Switch it off under Simulation settings instead of deleting it.
+3. **Tell readers before changing the contract** (see [Contract](#contract)). Write a note to everyone who reads the table before pushing the change, and keep old fields working until nothing reads them.
+4. **Secrets never go in git.** The shared env file (`CONVEX_URL`, `ANTHROPIC_API_KEY` and the rest) is pinned in the team chat. Save it locally as `.env.local`, which git ignores.
+5. **Stand-ins stay working.** Never break a stand-in someone is building against. Switch it off under Simulation settings instead of deleting it.
 
 ## The problem
 
